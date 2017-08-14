@@ -1,0 +1,50 @@
+﻿var trackClickTarget = function (event) {
+
+      //Το event ειναι ενα object που δινει η javascript απο μονη της στις συναρτησεις που
+      //ειναι callbacks σε events. Οριζω αρχικα ορισμενες μεταβλητες: mouseX, mouseY ειναι
+      // οι συντεταγμενες του κλικ του ποντικιου που μολις συνεβη. Ο χαρτης του παραδειγματος
+      //εχει εξαγωνα πλευρας 30. Θεωρουμε επισης οτι ολα τα εξαγωνα ειναι τοποθετημενα χυμα
+      //σε μια λιστα ονοματι tiles.
+
+      var mouseX = event.clientX, mouseY = event.clientY;
+      var temp = [], min = Infinity, dst;
+      var c = 45, current = null;
+
+      //εδω loopαρουμε ενα ενα τα αντικειμενα της λιστας. Αυτη η συνταξη θα σου θυμισει python.	
+      //dist ειναι μια συναρτηση που εχω ορισει ο ιδιος και δοθεντων 2 σημειων επιστρεφει την
+      //αποσταση τους. Η λογικη ειναι η εξης: Αποκλειουμε ολα τα εξαγωνα των οποιων τα μεσα,
+      //απεχουν περισσοτερο απο 45 απο το κλικ. Αυτα που απεχουν λιγοτερο απο 45 ειναι τα 
+      //αμφιλεγομενα και θα χρειαστουν εναν εξτρα ελεγχο, για αυτο τα βαζουμε σε μια προσωρινη 
+      // λιστα ονοματι temp.	
+
+      for(var tile of tiles){
+        if(dist(tile.middlePoint[0], tile.middlePoint[1], mouseX, mouseY)<c){
+          temp.push(tile);
+        }
+      }
+
+      //αφου εχουμε τη λιστα με τα αμφιλεγομενα εξαγωνα, τα οποια στη χειροτερη περιπτωση ειναι
+      //3, βρισκουμε αυτο του οποιου το μεσο, middlePoint [x,y], απεχει το λιγοτερο απο το κλικ.
+
+      for(tile of temp){
+        var dst = dist(tile.middlePoint[0], tile.middlePoint[1], mouseX, mouseY);
+        if(dst<min){
+          current = tile;
+          min = dst;
+        }
+      }
+  
+     //εφοσον βρηκμε το εξαγωνο και το βαλαμε στη μεταβλητη current σχεδιαζουμε σ αυτο ενα κοκκινο
+     //τετραγωνακι για να δουμε αν ο αλγοριθμος οντως δουλευει. Προφανως αυτο δε θα παραμεινει ετσι
+
+
+      //current.selected = true;
+      context.beginPath();
+      context.fillStyle = "#FF0000";
+      context.rect(current.middlePoint[0], current.middlePoint[1], 5, 5);
+      context.fill();
+
+    };
+
+    //κανουμε attach τη συναρτηση στο click event
+    window.addEventListener("click", trackClickTarget);
