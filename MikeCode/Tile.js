@@ -14,12 +14,21 @@ const TYPES = {
 };
 
 
-function Tile (type, X, Y, side_length) {
+function Tile (type, X, Y, side_length, map_width, map_height) {
 
         this.type = type;
         this.row = X;
         this.col = Y;
         this.side_length = side_length;
+
+        var centeredX = this.col - map_width / 2;
+        var centeredY = - this.row + map_height / 2;
+        this.cubeCoords = axesToCube(this.col, this.row);
+}
+
+
+Tile.prototype.getCubeCoords = function () {
+    return this.cubeCoords;
 }
 
 Tile.prototype.getPixelX = function () {
