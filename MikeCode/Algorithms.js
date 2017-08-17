@@ -2,14 +2,14 @@
  * Created by Snowhunter (Boulasikis Michail) on 14/8/2017.
  */
 
-const NORM_VECTORS_POLAR = {
-    ZERO: [1, 0],
-    PI_4: [1, Math.PI / 4],
-    PI3_4: [1, 3 * Math.PI / 4],
-    PI: [1, Math.PI],
-    MINUS_PI_4: [1, -Math.PI / 4],
-    MINUS_3PI_4: [1, -3 * Math.PI / 4]
-};
+var NORM_VECTORS_POLAR = [
+    [1, 0],
+    [1, Math.PI / 4],
+    [1, 3 * Math.PI / 4],
+    [1, Math.PI],
+    [1, -Math.PI / 4],
+    [1, -3 * Math.PI / 4]
+];
 
 // MORE EFFICIENT SOLUTION NEEDED
 // This function passed my normal distribution test
@@ -34,7 +34,7 @@ function vectorMagnitude (vector) {
 // Moves a point according to the flow of a vector field - the intensity of the vector does not matter, just the direction.
 function incrementPoint (point, vector) {
     var magn = vectorMagnitude(vector);
-    return [Math.round(point[0] + ( vector[0] / magn )), Math.round(point[1] + (vector[1] / magn))];
+    return [Math.round(point[0] + ( vector[0] / magn ) * 2), Math.round(point[1] + (vector[1] / magn) * 2)];
 }
 
 function vectorToPolar (vector) {
@@ -43,14 +43,4 @@ function vectorToPolar (vector) {
 
 function vectorToRect (vector) {
     return [vector[0]*Math.cos(vector[1]), vector[0]*Math.sin(vector[1])];
-}
-
-function findAdjacentPointsHex (point) {
-    var points = [];
-    NORM_VECTORS_POLAR.forEach(
-        function (item) {
-            points.push([Math.round(point[1] + item[0]*Math.cos(item[1])), Math.abs(point[0] + item[0]*Math.sin(item[1]))])
-        }
-    );
-    return points;
 }
