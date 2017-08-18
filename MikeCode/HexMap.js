@@ -108,8 +108,8 @@ HexMap.prototype.expandWithPercentage = function (vectors, percentage) {
 HexMap.prototype.generateIsland = function () {
 
     // helper variable declaration and setting
-    var horizontal_middle = this.width / 2;
-    var vertical_middle = this.height / 2;
+    var horizontal_middle = Math.floor(this.width / 2);
+    var vertical_middle = Math.floor(this.height / 2);
     var map_land_percentage = 0;
     while (map_land_percentage <= 0.0 || map_land_percentage >= 1.0) map_land_percentage = randGaussian(GENERATOR_MEAN_LAND_PERCENTAGE, GENERATOR_LAND_DEVIATION);
     var symmetry_axis_angle = (Math.random() * Math.PI / 2)
