@@ -1,6 +1,6 @@
 // Class Hex, for use on the map
 
-const HEX_SIDE = 60;
+const HEX_SIDE = 30;
 const TYPES = {
     "SEA" : 0,
     "SHORELINE" : 60,
@@ -16,6 +16,10 @@ function Hex (type, row, col) {
     Vector.call(this, row, col);
     this.type = type;
 }
+
+Hex.prototype.getVector = function () {
+    return new Vector(this.x, this.y);
+};
 
 // helping function - returns the X coordinate of the hex
 Hex.prototype.getPixelX = function () {

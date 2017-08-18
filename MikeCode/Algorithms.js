@@ -21,3 +21,11 @@ function uniqBy(array, key) {
         return seen.hasOwnProperty(k) ? false : (seen[k] = true);
     });
 }
+
+// Shuffles an array
+function shuffle (array) {
+    for (var i = array.length; i; i--) {
+        var j = Math.floor(Math.random() * i);
+        [array[i - 1], array[j]] = [array[j], array[i - 1]];
+    }
+}
