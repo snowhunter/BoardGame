@@ -6,8 +6,9 @@ var spriteSheet = new Image;
 var hexmap = new HexMap(22, 14);
 hexmap.generateIsland();
 
+spriteSheet.src = "spritesheet.png";
+
 spriteSheet.onload = function () {
     displayMap(hexmap);
-}
+};
 
-spriteSheet.src = "spritesheet.png";

@@ -7,9 +7,9 @@ function Vector (x, y) {
 
 // 2d vector to cube coordinates, for hexes
 Vector.prototype.toCube = function () {
-    var x = this.y - (this.x - (this.x & 1)) / 2;
-    var z = this.x;
-    var y = - x - z;
+    let x = this.y - (this.x - (this.x & 1)) / 2;
+    let z = this.x;
+    let y = - x - z;
     return new Cube(x, y, z);
 };
 

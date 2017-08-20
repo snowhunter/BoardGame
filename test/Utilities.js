@@ -1,4 +1,7 @@
-function makeTemplate(side, type, img){
+
+const TILE_TYPES = 8;
+
+function makeTemplate(side, type){
 
     /**
      * this function creates a hypothetical canvas, with the clipped tile image
@@ -7,14 +10,14 @@ function makeTemplate(side, type, img){
      */
 
         //creating the canvas, setting up its dimensions and getting the context
-    var canvas = document.createElement("canvas");
-    canvas.width = 2*8*side; //replace the 8 with the amount of total different tile types
-    canvas.height = 2*side;
-    var context = canvas.getContext('2d');
+    let canvas = document.createElement("canvas");
+    canvas.width = 2 * TILE_TYPES * side;
+    canvas.height = 2 * side;
+    let context = canvas.getContext('2d');
 
-    var incrX = Math.sqrt(3)*side/2;
-    var incrY = side/2;
-    var startX = {
+    let incrX = Math.sqrt(3)*side/2.0;
+    let incrY = side/2.0;
+    let startX = {
         "SEA" : 0,
         "SHORELINE" : 60,
         "PLAINS" : 120,
@@ -25,7 +28,36 @@ function makeTemplate(side, type, img){
         "MARSH" : 420
     }[type];
 
+    let image = document.createElement("img");
+    image.src = "spritesheet.png";
+    image.onload = function () {
+
+        context.save();
+        context.beginPath();
+        context.moveTo(startX, incrY);
+        context.lineTo(startX + incrX, 0);
+        context.lineTo(startX + 2*incrX, incrY);
+        context.lineTo(startX + 2*incrX, incrY + side);
+        context.lineTo(startX  + incrX, 2*side);
+        context.lineTo(startX, incrY + side);
+        context.closePath();
+        context.clip();
+
+        context.drawImage(image, startX, 0);
+
+        context.beginPath();
+        context.moveTo(startX, incrY);
+        context.lineTo(startX + incrX, 0);
+        context.lineTo(startX + 2*incrX, incrY);
+        context.lineTo(startX + 2*incrX, incrY + side);
+        context.lineTo(startX  + incrX, 2*side);
+        context.lineTo(startX, incrY + side);
+        context.closePath();
+        context.restore();
+
+    };
     //drawing the path
+    context.save();
     context.beginPath();
     context.moveTo(startX, incrY);
     context.lineTo(startX + incrX, 0);
@@ -37,15 +69,13 @@ function makeTemplate(side, type, img){
     context.clip();
     context.stroke();
 
-    context.drawImage(img, 0, 0);
-
     //returning the canvas, ready to be drawn onto the main map
     return canvas;
 }
 
 function setupCanvas() {
-    var map = document.getElementById("map").getContext('2d');
-    var stage = document.getElementById("stage").getContext('2d');
+    let map = document.getElementById("map").getContext('2d');
+    let stage = document.getElementById("stage").getContext('2d');
 
     map.canvas.width = window.innerWidth;
     map.canvas.height = window.innerHeight;
@@ -60,10 +90,14 @@ function setupCanvas() {
 }
 
 function displayMap(hexmap) {
-    for(var row of hexmap.contents){
-        for(var tile of row){
+    for(let row of hexmap.contents){
+        for(let tile of row){
             console.log(tile.startingPoint.x, tile.startingPoint.y);
             tile.show(contexts.mapContext);
         }
     }
+}
+
+function hexPath (context) {
+
 }
