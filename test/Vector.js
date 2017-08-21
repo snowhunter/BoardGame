@@ -18,18 +18,21 @@ Vector.prototype.addVector = function (vector1) {
     console.log(vector1);
     this.x += vector1.x;
     this.y += vector1.y;
+    return this;
 };
 
 // vector scalar multiplication
 Vector.prototype.scale = function (scalar) {
     this.x *= scalar;
     this.y *= scalar;
+    return this;
 };
 
 // vector subtraction
 Vector.prototype.subtractVector = function (vector1) {
     console.log(vector1);
     this.addVector(vector1.scale(-1));
+    return this;
 };
 
 // calculates the magnitude of the vector
