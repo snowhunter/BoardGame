@@ -3,7 +3,7 @@ var Tile = function (row, column, side, image, type) {
     Vector.call(this, row, column);
 
 
-    this.canvas = makeTemplate(side, type);
+    this.canvas = null;
     this.side = side;
     this.startingPoint = new Vector(this.x*Math.sqrt(3)*this.side + (this.y & 1) * this.side + (this.y & 1) * (-3), this.side*1.5*this.y);
     this.middlePoint = new Vector(this.x*Math.sqrt(3)*this.side + Math.sqrt(3)*this.side/2, this.side*2*this.y + this.side/2);
@@ -27,7 +27,10 @@ var Tile = function (row, column, side, image, type) {
     };
 
     this.show = function (context) {
-        context.drawImage(this.canvas, this.startingPoint.x, this.startingPoint.y);
+        if(!this.canvas){
+            this.canvas = makeTemplate(side, this.type, image);
+        }
+        context.drawImage(this.canvas, this.startingPoint.x - this.getOffset(), this.startingPoint.y);
     };
 
     this.getPixelX = function () {

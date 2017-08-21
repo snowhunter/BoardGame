@@ -1,7 +1,7 @@
 
 const TILE_TYPES = 8;
 
-function makeTemplate(side, type){
+function makeTemplate(side, type, image){
 
     /**
      * this function creates a hypothetical canvas, with the clipped tile image
@@ -9,7 +9,7 @@ function makeTemplate(side, type){
      *
      */
 
-        //creating the canvas, setting up its dimensions and getting the context
+    //creating the canvas, setting up its dimensions and getting the context
     let canvas = document.createElement("canvas");
     canvas.width = 2 * TILE_TYPES * side;
     canvas.height = 2 * side;
@@ -28,36 +28,7 @@ function makeTemplate(side, type){
         "MARSH" : 420
     }[type];
 
-    let image = document.createElement("img");
-    image.src = "spritesheet.png";
-    image.onload = function () {
-
-        context.save();
-        context.beginPath();
-        context.moveTo(startX, incrY);
-        context.lineTo(startX + incrX, 0);
-        context.lineTo(startX + 2*incrX, incrY);
-        context.lineTo(startX + 2*incrX, incrY + side);
-        context.lineTo(startX  + incrX, 2*side);
-        context.lineTo(startX, incrY + side);
-        context.closePath();
-        context.clip();
-
-        context.drawImage(image, startX, 0);
-
-        context.beginPath();
-        context.moveTo(startX, incrY);
-        context.lineTo(startX + incrX, 0);
-        context.lineTo(startX + 2*incrX, incrY);
-        context.lineTo(startX + 2*incrX, incrY + side);
-        context.lineTo(startX  + incrX, 2*side);
-        context.lineTo(startX, incrY + side);
-        context.closePath();
-        context.restore();
-
-    };
-    //drawing the path
-    context.save();
+    //context.save();
     context.beginPath();
     context.moveTo(startX, incrY);
     context.lineTo(startX + incrX, 0);
@@ -68,6 +39,8 @@ function makeTemplate(side, type){
     context.closePath();
     context.clip();
     context.stroke();
+
+    context.drawImage(image, 0, 0);
 
     //returning the canvas, ready to be drawn onto the main map
     return canvas;
@@ -90,14 +63,37 @@ function setupCanvas() {
 }
 
 function displayMap(hexmap) {
+
     for(let row of hexmap.contents){
         for(let tile of row){
-            console.log(tile.startingPoint.x, tile.startingPoint.y);
             tile.show(contexts.mapContext);
         }
     }
 }
 
-function hexPath (context) {
+function trackClickTarget(event) {
+    var clickLocation = new Vector(event.clientX, event.clientY);
+    var temp = [], min = Infinity, dst;
+    var c = 45, current = null;
+
+    for(var row of hexmap.contents){
+        for(var tile of row){
+            if(clickLocation.distanceFrom(tile.middlePoint)<c){
+                temp.push(tile);
+            }
+        }
+    }
+
+
+    for(tile of temp){
+        dst = clickLocation.distanceFrom(tile.middlePoint);
+        if(dst<min){
+            current = tile;
+            min = dst;
+        }
+    }
+
+    console.log(tile.middlePoint);
+
 
 }

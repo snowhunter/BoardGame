@@ -15,6 +15,7 @@ Vector.prototype.toCube = function () {
 
 // vector addition
 Vector.prototype.addVector = function (vector1) {
+    console.log(vector1);
     this.x += vector1.x;
     this.y += vector1.y;
 };
@@ -27,7 +28,8 @@ Vector.prototype.scale = function (scalar) {
 
 // vector subtraction
 Vector.prototype.subtractVector = function (vector1) {
-    this.add(vector1.scale(-1.0));
+    console.log(vector1);
+    this.addVector(vector1.scale(-1));
 };
 
 // calculates the magnitude of the vector
@@ -37,7 +39,7 @@ Vector.prototype.magnitude = function () {
 
 // calculates the distance from one vector to another
 Vector.prototype.distanceFrom = function (vector1) {
-    return (this.substractVector(vector1)).magnitude();
+    return (this.subtractVector(vector1)).magnitude();
 };
 
 // finds and returns a unit vector parallel to the original vector
@@ -50,6 +52,10 @@ Vector.prototype.unitVector = function () {
 Vector.prototype.dotProduct = function (vector1) {
     return (this.x * vector1.x) + (this.y * vector1.y);
 };
+
+Vector.prototype.toString = function () {
+    return "Vector object, x: " + this.x + ", y: " + this.y;
+}
 
 // for use in case we ever need to sort an array of vectors
 function compareVectors (vector1, vector2) {
