@@ -8,7 +8,7 @@ var spriteSheet = new Image, hexmap;
 
 
 spriteSheet.onload = function () {
-    hexmap = new HexMap(22, 14);
+    hexmap = new HexMap(30, 20);
     hexmap.generateIsland();
 
     window.addEventListener("click", trackClickTarget);

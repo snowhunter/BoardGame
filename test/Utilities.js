@@ -72,28 +72,25 @@ function displayMap(hexmap) {
 }
 
 function trackClickTarget(event) {
-    var clickLocation = new Vector(event.clientX, event.clientY);
-    var temp = [], min = Infinity, dst;
-    var c = 45, current = null;
+    let clickLocation = new Vector(event.clientX, event.clientY);
+    let temp = [], min = Infinity, dst;
+    let c = 45, current = null;
 
-    for(var row of hexmap.contents){
-        for(var tile of row){
-            if(clickLocation.distanceFrom(tile.middlePoint)<c){
+    for (let row of hexmap.contents) {
+        for (let tile of row) {
+            if(clickLocation.distanceFrom(tile.middlePoint) < c){
                 temp.push(tile);
             }
         }
     }
 
-
-    for(tile of temp){
+    for(var tile of temp){
         dst = clickLocation.distanceFrom(tile.middlePoint);
-        if(dst<min){
+        if(dst < min){
             current = tile;
             min = dst;
         }
     }
 
-    console.log(tile.middlePoint);
-
-
+    console.log(current.type);
 }
