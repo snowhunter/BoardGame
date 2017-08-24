@@ -25,9 +25,9 @@ var cube_directions = [
 
 // Calculates the distance between the centers of two cubes - may be useful sometime
 Cube.prototype.distanceFrom = function (cube) {
-    let dx = cube.x - this.x;
-    let dy = cube.y - this.y;
-    let dz = cube.z - this.z;
+    var dx = cube.x - this.x;
+    var dy = cube.y - this.y;
+    var dz = cube.z - this.z;
     return Math.sqrt(dx*dx + dy*dy + dz*dz);
 };
 
@@ -40,7 +40,7 @@ Cube.prototype.addCube = function (cube) {
 
 // turns cube coordinates back to a 2d vector
 Cube.prototype.toVector = function () {
-    let y = this.x + (this.z - (this.z & 1)) / 2;
-    let x = this.z;
+    var y = this.x + (this.z - (this.z & 1)) / 2;
+    var x = this.z;
     return new Vector(x, y);
 };

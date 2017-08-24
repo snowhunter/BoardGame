@@ -1,6 +1,7 @@
 
 const TILE_TYPES = 8;
 
+//creates a canvas property upon which the tile is drawn. The canvas context is then drawn onto the main map
 function makeTemplate(side, type, image){
 
     /**
@@ -45,7 +46,7 @@ function makeTemplate(side, type, image){
     //returning the canvas, ready to be drawn onto the main map
     return canvas;
 }
-
+//fetches the 2 canvas elements, sets their dimensions and returns their contexts
 function setupCanvas() {
     let map = document.getElementById("map").getContext('2d');
     let stage = document.getElementById("stage").getContext('2d');
@@ -61,7 +62,7 @@ function setupCanvas() {
         stageContext: stage
     };
 }
-
+//given a generated island, it displays it
 function displayMap(hexmap) {
 
     for(let row of hexmap.contents){
@@ -70,27 +71,120 @@ function displayMap(hexmap) {
         }
     }
 }
+//called on a click event, and strokes the clicked hexagon with a blueish color
+function highlightBorder(tile, context){
 
+    //console.log(context.canvas.width, context.canvas.height);
+
+    var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
+    var startY = tile.startingPoint.y + incrY ;
+
+    context.strokeStyle = "#1122BB";
+    context.lineWidth = 3;
+
+    context.beginPath();
+    context.moveTo(startX, startY);
+    context.lineTo(incrX + startX, startY - incrY);
+    context.lineTo(2*incrX + startX, startY);
+    context.lineTo(2*incrX + startX, startY + tile.side);
+    context.lineTo(incrX + startX, startY + tile.side + incrY);
+    context.lineTo(startX, startY + tile.side);
+    context.closePath();
+    context.stroke();
+
+}
+//locates the hexagon that was clicked and calls the appropriate methods on that hexagon
 function trackClickTarget(event) {
-    let clickLocation = new Vector(event.clientX, event.clientY);
-    let temp = [], min = Infinity, dst;
-    let c = 45, current = null;
+    var clickLocation = new Vector(event.clientX, event.clientY);
+    var temp = [], min = Infinity, dst;
+    var c = 45, current = null;
+    var k = null;
 
-    for (let row of hexmap.contents) {
-        for (let tile of row) {
-            if(clickLocation.distanceFrom(tile.middlePoint) < c){
+
+    for(var row of hexmap.contents){
+        for(var tile of row){
+            k = clickLocation.distanceFrom(tile.middlePoint);
+            if(k<c){
                 temp.push(tile);
             }
         }
     }
 
-    for(var tile of temp){
+
+    for(tile of temp){
         dst = clickLocation.distanceFrom(tile.middlePoint);
-        if(dst < min){
+        if(dst<min){
             current = tile;
             min = dst;
         }
     }
 
-    console.log(current.type);
+    highlightBorder(current, contexts.stageContext);
+    //showAvailablePaths(current, 1, hexmap);
+    //highlightFill(current, contexts.stageContext);
+    panel.selectTile(current, contexts.stageContext);
+
+}
+//given a tile and a range, highlights the adjacent tiles within that range
+function showAvailablePaths(tile, range, hexmap) {
+
+    var neighbours = hexmap.getNeighborsDistanceN(tile.getVector(), range), current;
+    contexts.mapContext.fillStyle = "#FF0000";
+
+    for(var neighbour of neighbours){
+        current = hexmap.contents[neighbour.x][neighbour.y];
+        contexts.mapContext.fillRect(current.middlePoint.x, current.middlePoint.y, 20, 20);
+
+        //console.log(current.getVector());
+    }
+    
+}
+//fills target hexagon with a low-opacity yellowish color
+function highlightFill(tile, context) {
+
+
+    var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
+    var startY = tile.startingPoint.y + incrY ;
+
+    contexts.fillStyle = "rgba(255, 243, 17, 0.5)";
+
+
+    context.beginPath();
+    context.moveTo(startX, startY);
+    context.lineTo(incrX + startX, startY - incrY);
+    context.lineTo(2*incrX + startX, startY);
+    context.lineTo(2*incrX + startX, startY + tile.side);
+    context.lineTo(incrX + startX, startY + tile.side + incrY);
+    context.lineTo(startX, startY + tile.side);
+    context.closePath();
+    context.fill();
+
+}
+//main loop, performs changes upon the stage and displays them. Does not alter mapContext
+function gameLoop() {
+
+    // Each new frame, clears the temporary canvas completely and draws anew
+    contexts.stageContext.clearRect(0, 0, contexts.stageContext.canvas.width, contexts.stageContext.canvas.height);
+
+    //select the already selected tile each frame, to make sure it displays the data properly
+    if(panel.selectedTile){
+        panel.selectTile(panel.selectedTile);
+    }
+
+    panel.show(contexts.stageContext);
+
+    if(panel.selectedTile){
+        highlightBorder(panel.selectedTile, contexts.stageContext);
+    }
+
+    for(var unit of units){
+        unit.show(contexts.stageContext);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+//spawns units to test if stuff works
+function spawnTestUnit() {
+    console.log("hi");
+    units.push(new Unit("soldier", panel.selectedTile));
 }

@@ -1,4 +1,3 @@
-
 // Class hex map. The actual map of the game - used to render, generate and store the island.
 
 const EXPANSION_DEVIATION = 0.1;
@@ -169,7 +168,6 @@ HexMap.prototype.generateIsland = function () {
     let mountains = [];
     for (let i = -Math.round(map_diagonal); i < Math.round(map_diagonal); i++) {
         let v = new Vector(Math.round(i + this.width / 2), -Math.round((Math.atan(slope) * i) - this.height / 2));
-        console.log(v.toString());
         if (this.isValidVector(v)) {
             mountains.push(v);
         }
