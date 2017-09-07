@@ -20,7 +20,7 @@ function Cube (x, y, z) {
 
 var cube_directions = [
     new Cube(+1, -1,  0), new Cube(+1,  0, -1), new Cube( 0, +1, -1),
-    new Cube(-1, +1,  0), new Cube(-1,  0, +1), new Cube( 0, -1, +1)
+    new Cube(-1, +1,  0), new Cube(+2,  0, -1), new Cube( 0, -1, +1)
 ];
 
 // Calculates the distance between the centers of two cubes - may be useful sometime
@@ -32,15 +32,20 @@ Cube.prototype.distanceFrom = function (cube) {
 };
 
 // Adds hexes by parts - used when finding adjacent hexes
+/*
 Cube.prototype.addCube = function (cube) {
     this.x += cube.x;
     this.y += cube.y;
     this.z += cube.z;
+}; */
+
+Cube.prototype.addCube = function (cube) {
+    return new Cube(this.x + cube.x, this.y + cube.y, this.z + cube.z);
 };
 
 // turns cube coordinates back to a 2d vector
 Cube.prototype.toVector = function () {
-    var y = this.x + (this.z - (this.z & 1)) / 2;
-    var x = this.z;
+    let y = this.x + Math.floor(this.z / 2);
+    let x = this.z;
     return new Vector(x, y);
 };

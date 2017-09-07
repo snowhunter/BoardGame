@@ -45,7 +45,7 @@ HexMap.prototype.getFullMapVectors = function () {
 
 // returns true if the vector is a valid hex on the map
 HexMap.prototype.isValidVector = function (vector) {
-    return ( (vector.x >= 0) && (vector.x <= this.width - 1) && (vector.y >= 0) && (vector.y <= this.height - 1) );
+    return ((vector.x >= 0) && (vector.x <= this.width - 1) && (vector.y >= 0) && (vector.y <= this.height - 1));
 };
 
 // returns true if the vector is on the edge of the map
@@ -59,10 +59,9 @@ HexMap.prototype.isEdge = function (vector) {
 HexMap.prototype.getNeighborsDistanceN = function (vector, n) {
     let neighbors = [vector];
     if (n === 0) return neighbors;
+    let cube = vector.toCube();
     for (let direction of cube_directions) {
-        let cube = vector.toCube();
-        cube.addCube(direction);
-        let neighbor = cube.toVector();
+        let neighbor = (cube.addCube(direction)).toVector();
         if (this.isValidVector(neighbor))
             neighbors.push(neighbor);
     }
@@ -174,7 +173,7 @@ HexMap.prototype.generateIsland = function () {
     }
     let rand = Math.abs(randGaussian(GENERATOR_MEAN_MOUNTAIN_EXCLUSION_PERCENTAGE, MOUNTAINS_EXPANSION_DEVIATION));
     mountains = this.expandWithPercentage(mountains, rand);
-    for (v of mountains)
+    for (let v of mountains)
         if ((this.tileAt(v).type !== "SEA" && this.tileAt(v).type !== "SHORELINE"))
             this.setTile(v, "MOUNTAINS");
 

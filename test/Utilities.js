@@ -72,8 +72,9 @@ function displayMap(hexmap) {
     }
 }
 //called on a click event, and strokes the clicked hexagon with a blueish color
-function highlightBorder(tile, context){
+function highlightBorder(t, context){
 
+    var tile = hexmap.tileAt(t);
     //console.log(context.canvas.width, context.canvas.height);
 
     var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
@@ -119,10 +120,24 @@ function trackClickTarget(event) {
         }
     }
 
-    highlightBorder(current, contexts.stageContext);
+
+    console.log(current.getVector());
+    var neighbours =getNeighbours(current.getVector());
+    var tiles = [];
+
+
+    for(var n of neighbours){
+        tiles.push(hexmap.tileAt(n));
+        highlightFill(n, contexts.stageContext);
+    }
+
+
+
+    highlightBorder(current.getVector(), contexts.stageContext);
     //showAvailablePaths(current, 1, hexmap);
     //highlightFill(current, contexts.stageContext);
     panel.selectTile(current, contexts.stageContext);
+    panel.selectNeighbours(tiles);
 
 }
 //given a tile and a range, highlights the adjacent tiles within that range
@@ -140,8 +155,9 @@ function showAvailablePaths(tile, range, hexmap) {
     
 }
 //fills target hexagon with a low-opacity yellowish color
-function highlightFill(tile, context) {
+function highlightFill(t, context) {
 
+    var tile = hexmap.tileAt(t);
 
     var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
     var startY = tile.startingPoint.y + incrY ;
@@ -171,10 +187,20 @@ function gameLoop() {
         panel.selectTile(panel.selectedTile);
     }
 
+    if(panel.neighbours){
+        panel.selectNeighbours(panel.neighbours);
+    }
+
     panel.show(contexts.stageContext);
 
     if(panel.selectedTile){
         highlightBorder(panel.selectedTile, contexts.stageContext);
+    }
+
+    if(panel.selectedNeighbours){
+        for(var t of panel.selectedNeighbours){
+            highlightFill(t, contexts.stageContext);
+        }
     }
 
     for(var unit of units){
@@ -187,4 +213,23 @@ function gameLoop() {
 function spawnTestUnit() {
     console.log("hi");
     units.push(new Unit("soldier", panel.selectedTile));
+}
+
+function getNeighbours (vector) {
+    let x = vector.x, y = vector.y;
+    let neighbours = [new Vector(x - 1, y), new Vector(x + 1, y)];
+    if (vector.y & 1) {
+        neighbours.push(new Vector(x, y - 1), new Vector(x + 1, y - 1), new Vector(x, y + 1), new Vector(x + 1, y + 1));
+    } else {
+        neighbours.push(new Vector(x - 1, y - 1), new Vector(x, y - 1), new Vector(x - 1, y + 1), new Vector(x, y + 1));
+    }
+
+    //looping through the array backwards to prevent errors from splicing while iterating
+    for (var i=neighbours.length-1; i>=0; i--) {
+        if (!hexmap.isValidVector(neighbours[i])){
+            neighbours.splice(i, 1);
+        }
+    }
+
+    return neighbours;
 }

@@ -8,6 +8,7 @@ var actionPanel = function (rowSpan, tileSize) {
     this.height = window.innerHeight;
 
     this.selectedTile = null;
+    this.selectedNeighbours = null;
     this.selectedTileType = null;
     this.selectedUnit = {type: null};
     
@@ -27,14 +28,14 @@ var actionPanel = function (rowSpan, tileSize) {
 
 
 
-    }
+    };
     
     this.drawPanel = function (context) {
         context.fillStyle = "#FF6B33";
         context.fillRect(this.startX, this.startY, this.width, this.height);
         context.strokeStyle = "#471158";
         context.strokeRect(this.startX + 3, this.startY + 3, this.width - 5, this.height - 5);
-    }
+    };
     
     this.displayTileData = function (context) {
         /**
@@ -54,7 +55,7 @@ var actionPanel = function (rowSpan, tileSize) {
         //image placeholder
         context.fillStyle = "#FFFFFF";
         context.fillRect(this.startX + this.width/2, this.startY + 15, 2*this.width/5, 2*this.width/5);
-    }
+    };
     
     this.displayUnitData = function (context) {
 
@@ -85,7 +86,7 @@ var actionPanel = function (rowSpan, tileSize) {
         context.fillText("HP: " + this.selectedUnit.hp + "/300", this.startX + 10, this.startY + 210);
         context.fillText("ATTACK: " + this.selectedUnit.attack, this.startX + 10, this.startY + 245);
 
-    }
+    };
 
     this.displayActions = function (context) {
         //frame
@@ -102,7 +103,7 @@ var actionPanel = function (rowSpan, tileSize) {
         }
         
         
-    }
+    };
     
     this.drawActionButtons = function (type, x, y, context) {
 
@@ -118,7 +119,7 @@ var actionPanel = function (rowSpan, tileSize) {
         context.font = "30px Arial";
         context.fillText(type, x+20, y+40);
 
-    }
+    };
 
     this.selectTile = function (tile) {
 
@@ -133,7 +134,13 @@ var actionPanel = function (rowSpan, tileSize) {
             this.selectedUnit = {type: null};
         }
 
-    }
+    };
+
+    this.selectNeighbours = function (tiles) {
+
+        this.selectedNeighbours = tiles; //***
+
+    };
 
     this.unselect = function () {
         this.selectedTile = null;
