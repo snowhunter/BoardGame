@@ -74,7 +74,7 @@ function displayMap(hexmap) {
 //called on a click event, and strokes the clicked hexagon with a blueish color
 function highlightBorder(t, context){
 
-    var tile = hexmap.tileAt(t);
+    var tile = hexmap.getTile(t);
     //console.log(context.canvas.width, context.canvas.height);
 
     var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
@@ -127,7 +127,7 @@ function trackClickTarget(event) {
 
 
     for(var n of neighbours){
-        tiles.push(hexmap.tileAt(n));
+        tiles.push(hexmap.getTile(n));
         highlightFill(n, contexts.stageContext);
     }
 
@@ -143,7 +143,7 @@ function trackClickTarget(event) {
 //given a tile and a range, highlights the adjacent tiles within that range
 function showAvailablePaths(tile, range, hexmap) {
 
-    var neighbours = hexmap.getNeighborsDistanceN(tile.getVector(), range), current;
+    var neighbours = getNeighborsDistanceN(hexmap, tile.getVector(), range), current;
     contexts.mapContext.fillStyle = "#FF0000";
 
     for(var neighbour of neighbours){
@@ -157,12 +157,12 @@ function showAvailablePaths(tile, range, hexmap) {
 //fills target hexagon with a low-opacity yellowish color
 function highlightFill(t, context) {
 
-    var tile = hexmap.tileAt(t);
+    var tile = hexmap.getTile(t);
 
     var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
     var startY = tile.startingPoint.y + incrY ;
 
-    contexts.fillStyle = "rgba(255, 243, 17, 0.5)";
+    context.fillStyle = "rgba(255, 243, 17, 0.5)";
 
 
     context.beginPath();
@@ -226,7 +226,7 @@ function getNeighbours (vector) {
 
     //looping through the array backwards to prevent errors from splicing while iterating
     for (var i=neighbours.length-1; i>=0; i--) {
-        if (!hexmap.isValidVector(neighbours[i])){
+        if (!isValidVector(hexmap, neighbours[i])){
             neighbours.splice(i, 1);
         }
     }
