@@ -1,3 +1,10 @@
+/**
+ * Important!!!
+ * Whatever new features you add, remember they will not display unless they are drawn on EVERY frame
+ * The gameLoop function itself needs to be tweaked in order to display new stuff.
+ */
+
+
 
 const TILE_TYPES = 8;
 
@@ -120,9 +127,8 @@ function trackClickTarget(event) {
         }
     }
 
-
-    console.log(current.getVector());
-    var neighbours =getNeighbours(current.getVector());
+    //we've found the clicked tile and now we call the appropriate methods
+    var neighbours = getNeighbours(current.getVector());
     var tiles = [];
 
 
@@ -132,9 +138,7 @@ function trackClickTarget(event) {
     }
 
 
-
     highlightBorder(current.getVector(), contexts.stageContext);
-    //showAvailablePaths(current, 1, hexmap);
     //highlightFill(current, contexts.stageContext);
     panel.selectTile(current, contexts.stageContext);
     panel.selectNeighbours(tiles);
@@ -143,7 +147,7 @@ function trackClickTarget(event) {
 //given a tile and a range, highlights the adjacent tiles within that range
 function showAvailablePaths(tile, range, hexmap) {
 
-    var neighbours = getNeighborsDistanceN(hexmap, tile.getVector(), range), current;
+    var neighbours = hexmap.getNeighborsDistanceN(tile.getVector(), range), current;
     contexts.mapContext.fillStyle = "#FF0000";
 
     for(var neighbour of neighbours){
@@ -187,8 +191,8 @@ function gameLoop() {
         panel.selectTile(panel.selectedTile);
     }
 
-    if(panel.neighbours){
-        panel.selectNeighbours(panel.neighbours);
+    if(panel.selectedNeighbours){
+        panel.selectNeighbours(panel.selectedNeighbours);
     }
 
     panel.show(contexts.stageContext);
@@ -199,7 +203,7 @@ function gameLoop() {
 
     if(panel.selectedNeighbours){
         for(var t of panel.selectedNeighbours){
-            highlightFill(t, contexts.stageContext);
+            highlightFill(t.getVector(), contexts.stageContext);
         }
     }
 
@@ -214,7 +218,7 @@ function spawnTestUnit() {
     console.log("hi");
     units.push(new Unit("soldier", panel.selectedTile));
 }
-
+//given the vector pointing to a tile, returns a list containing the vectors of the neighbours
 function getNeighbours (vector) {
     let x = vector.x, y = vector.y;
     let neighbours = [new Vector(x - 1, y), new Vector(x + 1, y)];
@@ -232,4 +236,38 @@ function getNeighbours (vector) {
     }
 
     return neighbours;
+}
+//given a vector and a range, finds every possible neighbour in that range
+function getNeighboursDistanceN(vector, range = 1, neighbours = null){
+
+    temp = [];
+    if(range>1){
+        if(!neighbours){
+            neighbours = getNeighbours(vector);
+            range--;
+        }
+        else{
+            for(var neighbour of neighbours){
+                temp.concat(getNeighbours(neighbour));
+            }
+            neighbours.concat(temp);
+            range--;
+            return getNeighboursDistanceN(vector, range, neighbours);
+        }
+    }
+    else{
+        return removeDuplicateVectors(neighbours);
+
+    }
+
+}
+
+function removeDuplicateVectors(array){
+    var temp;
+    array.forEach(function (element) {
+        if(temp.indexOf(element) == -1){
+            temp.push(element);
+        }
+    });
+    return temp;
 }
