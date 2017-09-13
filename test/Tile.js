@@ -25,6 +25,13 @@ var Tile = function (row, column, side, image, type) {
         }[this.type];
     };
 
+
+
+    this.drawPortrait = function (context) {
+
+
+    };
+
     this.getVector = function () {
         return new Vector(this.x, this.y);
     };

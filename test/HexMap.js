@@ -13,7 +13,7 @@ function HexMap (width, height) {
     for (let i = 0; i < this.width; i++) {
         this.contents[i] = [];
         for (let j = 0; j < this.height; j++)
-            this.contents[i].push(new Tile(i, j, HEX_SIDE, spriteSheet, "SEA"));
+            this.contents[i].push(new Tile(i, j, HEX_SIDE, images[0], "SEA"));
     }
 }
 
@@ -99,8 +99,8 @@ const GENERATOR_FOREST_EXPANSION_DEVIATION = 0.8;
 const HEAVY_FOREST_TURN_CHANCE = 0.275;
 const MAX_FOREST_EXPANSIONS = 3;
 const GENERATOR_FOREST_NUMBER_DEVIATION = 0.2;
-const UPPER_FOREST_LIMIT = 25;
-const LOWER_FOREST_LIMIT = 10;
+const UPPER_FOREST_LIMIT = 15;
+const LOWER_FOREST_LIMIT = 5;
 const HEAVY_FOREST_ALLOWANCE_LIMIT = 7;
 
 // constants that have to do with the mountain range

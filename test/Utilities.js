@@ -53,6 +53,39 @@ function makeTemplate(side, type, image){
     //returning the canvas, ready to be drawn onto the main map
     return canvas;
 }
+//
+function getPortraitOffset(type) {
+    return {
+        "SEA" : 0,
+        "SHORELINE" : 220,
+        "PLAINS" : 440,
+        "FOREST_LIGHT" : 660,
+        "FOREST_HEAVY" : 880,
+        "MOUNTAINS" : 1100,
+        "SWAMP" : 1320,
+        "MARSH" : 1540
+    }[type];
+}
+//
+function makePortraitTemplate(type, image) {
+
+    let canvas = document.createElement("canvas"), context = canvas.getContext('2d'), offset = getPortraitOffset(type);
+    canvas.width = 220;
+    canvas.height = 200;
+
+    context.beginPath();
+    context.moveTo(offset, 0);
+    context.lineTo(offset+220, 0);
+    context.lineTo(offset+220, 200);
+    context.lineTo(offset, 200);
+    context.closePath();
+    context.clip();
+
+    context.drawImage(image, 0, 0);
+
+    return canvas;
+
+}
 //fetches the 2 canvas elements, sets their dimensions and returns their contexts
 function setupCanvas() {
     let map = document.getElementById("map").getContext('2d');
@@ -103,14 +136,14 @@ function highlightBorder(t, context){
 }
 //locates the hexagon that was clicked and calls the appropriate methods on that hexagon
 function trackClickTarget(event) {
-    var clickLocation = new Vector(event.clientX, event.clientY);
-    var temp = [], min = Infinity, dst;
-    var c = 45, current = null;
-    var k = null;
+    let clickLocation = new Vector(event.clientX, event.clientY);
+    let temp = [], min = Infinity, dst;
+    let c = 45, current = null;
+    let k = null;
 
 
-    for(var row of hexmap.contents){
-        for(var tile of row){
+    for(let row of hexmap.contents){
+        for(let tile of row){
             k = clickLocation.distanceFrom(tile.middlePoint);
             if(k<c){
                 temp.push(tile);
@@ -119,8 +152,8 @@ function trackClickTarget(event) {
     }
 
 
-    for(tile of temp){
-        dst = clickLocation.distanceFrom(tile.middlePoint);
+    for(let tile of temp){
+        let dst = clickLocation.distanceFrom(tile.middlePoint);
         if(dst<min){
             current = tile;
             min = dst;
@@ -128,11 +161,11 @@ function trackClickTarget(event) {
     }
 
     //we've found the clicked tile and now we call the appropriate methods
-    var neighbours = getNeighbours(current.getVector());
-    var tiles = [];
+    let neighbours = getNeighbours(current.getVector());
+    let tiles = [];
 
 
-    for(var n of neighbours){
+    for(let n of neighbours){
         tiles.push(hexmap.getTile(n));
         highlightFill(n, contexts.stageContext);
     }
@@ -144,27 +177,13 @@ function trackClickTarget(event) {
     panel.selectNeighbours(tiles);
 
 }
-//given a tile and a range, highlights the adjacent tiles within that range
-function showAvailablePaths(tile, range, hexmap) {
-
-    var neighbours = hexmap.getNeighborsDistanceN(tile.getVector(), range), current;
-    contexts.mapContext.fillStyle = "#FF0000";
-
-    for(var neighbour of neighbours){
-        current = hexmap.contents[neighbour.x][neighbour.y];
-        contexts.mapContext.fillRect(current.middlePoint.x, current.middlePoint.y, 20, 20);
-
-        //console.log(current.getVector());
-    }
-    
-}
 //fills target hexagon with a low-opacity yellowish color
 function highlightFill(t, context) {
 
-    var tile = hexmap.getTile(t);
+    let tile = hexmap.getTile(t);
 
-    var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
-    var startY = tile.startingPoint.y + incrY ;
+    let startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
+    let startY = tile.startingPoint.y + incrY ;
 
     context.fillStyle = "rgba(255, 243, 17, 0.5)";
 
@@ -202,12 +221,12 @@ function gameLoop() {
     }
 
     if(panel.selectedNeighbours){
-        for(var t of panel.selectedNeighbours){
+        for(let t of panel.selectedNeighbours){
             highlightFill(t.getVector(), contexts.stageContext);
         }
     }
 
-    for(var unit of units){
+    for(let unit of units){
         unit.show(contexts.stageContext);
     }
 
@@ -215,7 +234,6 @@ function gameLoop() {
 }
 //spawns units to test if stuff works
 function spawnTestUnit() {
-    console.log("hi");
     units.push(new Unit("soldier", panel.selectedTile));
 }
 //given the vector pointing to a tile, returns a list containing the vectors of the neighbours
@@ -229,7 +247,7 @@ function getNeighbours (vector) {
     }
 
     //looping through the array backwards to prevent errors from splicing while iterating
-    for (var i=neighbours.length-1; i>=0; i--) {
+    for (let i=neighbours.length-1; i>=0; i--) {
         if (!isValidVector(hexmap, neighbours[i])){
             neighbours.splice(i, 1);
         }
@@ -265,7 +283,7 @@ function getNeighboursDistanceN(vector, range = 1, neighbours = null){
 function removeDuplicateVectors(array){
     var temp;
     array.forEach(function (element) {
-        if(temp.indexOf(element) == -1){
+        if(temp.indexOf(element) === -1){
             temp.push(element);
         }
     });

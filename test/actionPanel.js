@@ -6,19 +6,23 @@ var actionPanel = function (rowSpan, tileSize) {
     this.width = window.innerWidth - this.startX; // ~275
     this.height = window.innerHeight;
 
-    //button coordinates
-    this.attackButtonX;
-    this.attackButtonY;
-
-    this.moveButtonX;
-    this.moveButtonY;
-
 
     //reference to selected stuff
     this.selectedTile = null;
     this.selectedNeighbours = null;
     this.selectedTileType = null;
     this.selectedUnit = {type: null};
+
+    this.portraits = {
+        "SEA": makePortraitTemplate("SEA", images[1]),
+        "SHORELINE" : makePortraitTemplate("SHORELINE", images[1]),
+        "PLAINS" : makePortraitTemplate("PLAINS", images[1]),
+        "FOREST_LIGHT" : makePortraitTemplate("FOREST_LIGHT", images[1]),
+        "FOREST_HEAVY" : makePortraitTemplate("FOREST_HEAVY", images[1]),
+        "MOUNTAINS" : makePortraitTemplate("MOUNTAINS", images[1]),
+        "SWAMP" : makePortraitTemplate("SWAMP", images[1]),
+        "MARSH" : makePortraitTemplate("MARSH", images[1]),
+    };
     
 
     this.show = function (context) {
@@ -59,12 +63,18 @@ var actionPanel = function (rowSpan, tileSize) {
         message = "Terrain:";
         textlength = context.measureText(message).width;
         context.font = fontsize + "px Arial";
+        placeHolderY = this.startY  + 50 + fontsize;
         context.fillText(message, this.startX + (width - textlength)/2 , this.startY + 40);
 
-        //placeholder
-        placeHolderY = this.startY  + 50 + fontsize;
-        context.fillStyle = "#FFFFFF";
-        context.fillRect(this.startX + 10, placeHolderY, this.width - 20, height - placeHolderY);
+        if(this.selectedTile){
+            context.drawImage(this.portraits[this.selectedTileType], start_x+3 + getPortraitOffset(this.selectedTileType), placeHolderY, this.width - 20, height - placeHolderY);
+        }
+        else{
+            //placeholder
+            context.fillStyle = "#FFFFFF";
+            context.fillRect(start_x+ 3, placeHolderY, this.width - 20, height - placeHolderY);
+        }
+
 
     };
     
@@ -169,11 +179,5 @@ var actionPanel = function (rowSpan, tileSize) {
 
     };
 
-    this.unselect = function () {
-        this.selectedTile = null;
-        this.selectedTileType = null;
-        this.selectedUnit = {type: null};
-    }
 
-
-}
+};

@@ -45,7 +45,7 @@ Vector.prototype.distanceFrom = function (vector1) {
 
 // finds and returns a unit vector parallel to the original vector
 Vector.prototype.unitVector = function () {
-    var result = new Vector(this.x, this.y);
+    let result = new Vector(this.x, this.y);
     return result.scale(1.0 / result.magnitude());
 };
 
