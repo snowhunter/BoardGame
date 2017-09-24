@@ -15,8 +15,8 @@ for(let i=0; i<imageCount; i++){
 }
 
 
-images[0].src = "spritesheet.png";
-images[1].src = "TileIcons.png";
+images[0].src = "./Graphics/spritesheet.png";
+images[1].src = "./Graphics/TileIcons.png";
 
 
 const size = getProperSize(), rowspan = 45, colspan = 29;
