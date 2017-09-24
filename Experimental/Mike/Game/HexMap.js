@@ -24,11 +24,19 @@ HexMap.prototype.setTile = function (tile, type) {
     this.contents[tile.x][tile.y].setType(type);
 };
 
+HexMap.prototype.isValidVector = function (vector) {
+    return ( (vector.x >= 0) && (vector.x <= this.width - 1) && (vector.y >= 0) && (vector.y <= this.height - 1) );
+};
 
 function isValidVector(hexmap, vector) {
     return ( (vector.x >= 0) && (vector.x <= hexmap.width - 1) && (vector.y >= 0) && (vector.y <= hexmap.height - 1) );
 }
 
+HexMap.prototype.isEdge = function (vector) {
+    if (this.isValidVector(vector))
+        return ((vector.x === 0) || (vector.y === 0) || (vector.x === this.width - 1) || (vector.y === this.height - 1));
+    return false;
+};
 
 function isEdge (hexmap, vector) {
     if (isValidVector(hexmap, vector))
@@ -58,14 +66,6 @@ function getNeighboursDistanceN (hexmap, vector, n) {
 
 }
 
-
-function findNumberOfHexesType (hexmap, vectors, type) {
-    let count = 0;
-    for (let v of vectors)
-        if (hexmap.getTile(v).type === type) count++;
-    return count;
-}
-
 function expand (hexmap, vectors, percentage=1, deviation=0) {
     let expansion = vectors.slice();
     for (let v of expansion)
@@ -81,223 +81,110 @@ function expand (hexmap, vectors, percentage=1, deviation=0) {
     return uniqBy(expansion, JSON.stringify);
 }
 
+// Maxinum allowed height/wetness for elevation and humidity
+const MAX_HEIGHT = 25;
 
-HexMap.prototype.tilesToArray = function () {
-    let tiles = [];
-    for (let i of this.contents)
-        for (let j of i)
-            tiles.push(j.getVector());
-    return tiles;
-};
+// Various "constant" constants. Not to be changed unless the system of the game changes
+const SCREEN_RATIO = 1.778;
+const DC_COEFFICIENT_STRETCH_FACTOR = 0.1305;
+const DC_COEFFICIENT_SCALE_FACTOR = 2;
 
-HexMap.prototype.shiftVectorRelativeToCenter = function (vector) {
-    return new Vector(vector.x - Math.round(this.width / 2), Math.round(this.height / 2) - vector.y);
-};
+// To what power is the elevation matrix raised to? (In order to redistribute the noise)
+const ELEVATION_EXPONENT = 0.8;
 
-HexMap.prototype.shiftVectorBackToGrid = function (vector) {
-  return new Vector(vector.x + Math.round(this.width / 2), Math.round(this.height / 2) - vector.y);
-};
+// frequencies and amplitudes for elevation noise sinusoids
+const ELEVATION_FIRST_HARMONIC_AMP = 0.4;
+const ELEVATION_FIRST_HARMONIC_FREQ = 3;
+const ELEVATION_SECOND_HARMONIC_AMP = 0.5;
+const ELEVATION_SECOND_HARMONIC_FREQ = 4;
 
-HexMap.prototype.generateFunctionalCentered = function () {
+// elevation conditions and limits
+const CONDITION_LAND_ELEVATION = 0.45;
+const CONDITION_BEACH_ELEVATION = 0.59;
+const CONDITION_MOUNTAIN_ELEVATION = 1.82;
+const CONDITION_MOUNTAIN_STOP_ELEVATION = 2.3;
 
-    let vertical_chance = Math.random();
+// frequencies and amplitudes for humidity noise sinusoids
+const HUMIDITY_FIRST_HARMONIC_AMP = 3;
+const HUMIDITY_FIRST_HARMONIC_FREQ = 1.5;
+const HUMIDITY_SECOND_HARMONIC_AMP = 4;
+const HUMIDITY_SECOND_HARMONIC_FREQ = 2.8;
+const HUMIDITY_THIRD_HARMONIC_AMP = 5.2;
+const HUMIDITY_THIRD_HARMONIC_FREQ = 4.2;
 
-    let A = Math.random() * 4 - 2;
-    let B = Math.random() / Math.sqrt(this.width/3);
-    let C = Math.random() * 2 - 1;
+// humidity conditions and limits
+const CONDITION_LIGHT_FOREST_HUMIDITY = 0.56;
+const CONDITION_HEAVY_FOREST_HUMIDITY = 1.96;
+const CONDITION_SWAMP_HUMIDITY = 3.87;
+const CONDITION_MARSH_HUMIDITY_LAND = 4.87;
+const CONDITION_MARSH_HUMIDITY_SHORE = 3.87;
 
-    let linspace = [];
-    let results = [];
-    for (let i = -this.width / 2; i <= this.width / 2; i += 0.5)
-        if (vertical_chance < 0.5)
-            linspace.push(new Vector(Math.round(i), Math.round(i * (A * Math.exp(-Math.pow(B * i, 2)) + C))));
+HexMap.prototype.assignTileType = function (vector, elev, hum) {
+    if (between(elev, CONDITION_LAND_ELEVATION, CONDITION_BEACH_ELEVATION)) {
+        if (between(hum, -MAX_HEIGHT, CONDITION_MARSH_HUMIDITY_SHORE))
+            this.setTile(vector, "SHORELINE");
+        else if (between(hum, CONDITION_MARSH_HUMIDITY_SHORE, MAX_HEIGHT))
+            this.setTile(vector, "MARSH");
+    }
+    if (between(elev, CONDITION_BEACH_ELEVATION, CONDITION_MOUNTAIN_ELEVATION)) {
+        if (between(hum, -MAX_HEIGHT, CONDITION_LIGHT_FOREST_HUMIDITY))
+            this.setTile(vector, "PLAINS");
+        else if (between(hum, CONDITION_LIGHT_FOREST_HUMIDITY, CONDITION_HEAVY_FOREST_HUMIDITY))
+            this.setTile(vector, "FOREST_LIGHT");
+        else if (between(hum, CONDITION_HEAVY_FOREST_HUMIDITY, CONDITION_SWAMP_HUMIDITY))
+            this.setTile(vector, "FOREST_HEAVY");
+        else if (between(hum, CONDITION_SWAMP_HUMIDITY, CONDITION_MARSH_HUMIDITY_LAND))
+            this.setTile(vector, "SWAMP");
+        else if (between(hum, CONDITION_MARSH_HUMIDITY_LAND, MAX_HEIGHT))
+            this.setTile(vector, "MARSH");
         else
-            linspace.push(new Vector(Math.round(i * (A * Math.exp(-Math.pow(B * i, 2)) + C)), Math.round(i)));
-    for (let v of linspace)
-        if (isValidVector(this, this.shiftVectorBackToGrid(v)))
-            results.push(this.shiftVectorBackToGrid(v));
-    return [results, C];
-};
-
-// returns a list of vectors that are part of a growth
-HexMap.prototype.generateGrowth = function (area, vector, percentage) {
-    let growth = [vector];
-    do {
-        growth = expand(this, growth);
-    } while (growth.length / area.length < percentage);
-    return growth;
-};
-
-HexMap.prototype.generateBorders = function (landmass, border_outer, exclude="") {
-    let borders = [];
-    for (let v of landmass)
-        if (findNumberOfHexesType(this, getNeighboursDistanceN(this, v, 1), border_outer) && this.getTile(v).type !== exclude)
-            borders.push(v);
-    return borders;
-};
-
-HexMap.prototype.findSymmetricPair = function (on_tile_type) {
-
-    let root = new Vector(0, 0);
-    let i = 0;
-
-    while (!(this.getTile(root).type === on_tile_type) && i < 100) {
-        let a = Math.abs(Math.round(Math.random() * (this.width - 1)));
-        let b = Math.abs(Math.round(Math.random() * (this.height - 1)));
-        root.x = a; root.y = b;
-        i++;
+            this.setTile(vector, "PLAINS");
     }
+    if (between(elev, CONDITION_MOUNTAIN_ELEVATION, CONDITION_MOUNTAIN_STOP_ELEVATION)) this.setTile(vector, "MOUNTAINS");
 
-    let symmetric = sub(scale(new Vector(Math.round(this.width / 2), Math.round(this.height / 2)), 2), root);
-    if (isValidVector(this, symmetric)) {
-        let j = 0;
-        let sym_list = [symmetric];
-        while (!(this.getTile(symmetric).type === on_tile_type) && j < (this.width + this.height) / 8 ) {
-            sym_list = expand(this, sym_list);
-            for (let v of sym_list) {
-                if (this.getTile(v).type === on_tile_type) {
-                    symmetric = v;
-                    break;
-                }
-            }
-            j++;
-        }
-        return [root, symmetric];
-    } else {
-        console.log("Failed to find a symmetric");
-        return [root];
-    }
-
-
+    if (this.isEdge(vector)) this.setTile(vector, "SEA");
 };
-
-HexMap.prototype.generateJags = function (vectors, layers, exclusion_starting) {
-    let jags = vectors.slice();
-    for (let i = 1; i < layers + 1; i++)
-        jags = expand(this, jags, exclusion_starting * i, 0);
-    return jags;
-};
-
-
-// constants that have to do with the percentage of land on the map
-const GENERATOR_MEAN_LAND_PERCENTAGE = 0.75;
-const GENERATOR_LAND_PERCENTAGE_DEVIATION = 0.05;
-
-// constants that have to do with forests
-const GENERATOR_FOREST_MEAN_EXCLUSION_PERCENTAGE = 0.8;
-const GENERATOR_FOREST_EXPANSION_DEVIATION = 0.15;
-const HEAVY_FOREST_TURN_CHANCE = 0.7;
-const HEAVY_FOREST_ALLOWANCE_LIMIT = 7;
-
-// constants that have to do with the mountain range
-const GENERATOR_MOUNTAINRANGE_CHANCE = 0.9;
-const GENERATOR_MEAN_MOUNTAIN_EXCLUSION_PERCENTAGE = 0.9;
-const MOUNTAINS_EXPANSION_DEVIATION = 0.28;
-const MOUNTAINS_EXPANSION_DEVIATION_DEVIATION = 0.03;
-const MOUNTAINS_SHORELINE_EXCLUSION_CHANCE = 0.3;
-
-
-const SWAMP_EXPANSION_NUMBER = 3;
 
 HexMap.prototype.generateIsland = function () {
 
-    let UPPER_FOREST_LIMIT = this.width / 2;
-    let LOWER_FOREST_LIMIT = Math.round(this.width / 3);
-    let MAX_FOREST_EXPANSIONS = Math.ceil(this.width / 12);
-    let MAX_MOUNTAIN_EXPANSIONS = Math.round(this.width / 40);
+    // Ορίζω τον generator θορύβου.
+    let gen = new SimplexNoise();
 
+    // Αρχικοποίηση των πινάκων humidity και elevation.
+    let elevation = zeroes(this.width, this.height);
+    let humidity = zeroes(this.width, this.height);
 
-    let map_land_percentage = 0;
-    while (map_land_percentage <= 0.0 || map_land_percentage >= 0.85)
-        map_land_percentage = randGaussian(GENERATOR_MEAN_LAND_PERCENTAGE, GENERATOR_LAND_PERCENTAGE_DEVIATION);
+    // Για κάθε στοιχείο των πινάκων...
+    for (let i = 0; i < this.width; i++) {
+        for (let j = 0; j < this.height; j++) {
 
-    let middle = new Vector(Math.round((this.width - 1) / 2), Math.round((this.height - 1) / 2));
+            // Οι συντεταγμένες (i, j) συρρικνωμένες σε ένα τετράγωνο 1x1 με κέντρο το (0,0), για να εισαχθούν στον generator.
+            let nx = i / this.width - 0.5, ny = j / this.height - 0.5;
 
-    let landmass = this.generateGrowth(this.tilesToArray(), middle, map_land_percentage);
-    for (let t of landmass)
-        this.setTile(t, "PLAINS");
+            // Μεταφορά της αρχής αξόνων από την πάνω αριστερά γωνία στο κέντρο του χάρτη.
+            let x = i - this.width / 2, y = this.height / 2 - j;
 
+            // Εδώ υπολογίζεται η DC συνιστώσα του elevation, F(x,y) = exp[-((Ax/R)^2 + Ay^2)] - A^2(Sqrt((x/R)^2 + y^2)
+            let dc_coefficient_elevation = Math.exp(-(Math.pow(DC_COEFFICIENT_STRETCH_FACTOR * x / SCREEN_RATIO, 2) + Math.pow(DC_COEFFICIENT_STRETCH_FACTOR * y, 2)))
+                - Math.pow(DC_COEFFICIENT_STRETCH_FACTOR, 2) * Math.sqrt(((x * x) / (SCREEN_RATIO * SCREEN_RATIO)) + y * y);
 
-    let shores = this.generateBorders(landmass, "SEA", "SEA");
-    let jaggedness = this.generateJags(shores, 2, 0.2);
-    for (let v of jaggedness)
-        this.setTile(v, "SEA");
+            // Υπολογίζεται το elevation με βάση 2 αρμονικές θορύβου, την DC συνιστώσα και το όλο άθροισμα υψώνεται στην ELEVATION_EXPONENT
+            elevation[i][j] = (
+                Math.pow(
+                    ELEVATION_FIRST_HARMONIC_AMP * (gen.noise2D(ELEVATION_FIRST_HARMONIC_FREQ * nx, ELEVATION_FIRST_HARMONIC_FREQ * ny) / 2 + 0.5)
+                    + ELEVATION_SECOND_HARMONIC_AMP * (gen.noise2D(ELEVATION_SECOND_HARMONIC_FREQ * nx, ELEVATION_SECOND_HARMONIC_FREQ * ny) / 2 + 0.5)
+                    + DC_COEFFICIENT_SCALE_FACTOR * dc_coefficient_elevation, ELEVATION_EXPONENT)
+            );
 
-    shores = this.generateBorders(this.tilesToArray(), "SEA", "SEA");
-    for (let t of shores)
-       this.setTile(t, "SHORELINE");
+            // Υπολογίζεται το humidity με βάση 3 αρμονικές θορύβου.
+            humidity[i][j] = (
+                HUMIDITY_FIRST_HARMONIC_AMP * gen.noise2D(HUMIDITY_FIRST_HARMONIC_FREQ * nx, HUMIDITY_FIRST_HARMONIC_FREQ * ny) / 2 + 0.5
+                + HUMIDITY_SECOND_HARMONIC_AMP * gen.noise2D(HUMIDITY_SECOND_HARMONIC_FREQ * nx, HUMIDITY_SECOND_HARMONIC_FREQ * ny) / 2 + 0.5
+                + HUMIDITY_THIRD_HARMONIC_AMP * gen.noise2D(HUMIDITY_THIRD_HARMONIC_FREQ * nx, HUMIDITY_THIRD_HARMONIC_FREQ * ny) / 2 + 0.5
+            );
 
-    let mountain_count_chance = Math.random();
-    if (mountain_count_chance > 1 - GENERATOR_MOUNTAINRANGE_CHANCE) {
-        let mountain_list = this.generateFunctionalCentered();
-        let mountains = mountain_list[0];
-        for (let i = 0; i < MAX_MOUNTAIN_EXPANSIONS; i++)
-            mountains = expand(this, mountains, Math.abs(randGaussian(GENERATOR_MEAN_MOUNTAIN_EXCLUSION_PERCENTAGE, MOUNTAINS_EXPANSION_DEVIATION)), MOUNTAINS_EXPANSION_DEVIATION_DEVIATION);
-        for (let v of mountains)
-            if (this.getTile(v).type !== "SEA" && (this.getTile(v).type !== "SHORELINE" || Math.random() < MOUNTAINS_SHORELINE_EXCLUSION_CHANCE))
-                this.setTile(v, "MOUNTAINS");
+            // Με βάση το humidity και το elevation καθορίζεται το είδος του tile.
+            this.assignTileType(new Vector(i, j), elevation[i][j], humidity[i][j]);
+        }
     }
-
-    for (let i of this.tilesToArray())
-        if (findNumberOfHexesType(this, getNeighboursDistanceN(this, i, 1), "SEA") === 6)
-            this.setTile(i, "SEA");
-
-    let forests = [];
-    let nOfForests = Math.ceil(Math.random() * (UPPER_FOREST_LIMIT - LOWER_FOREST_LIMIT) + LOWER_FOREST_LIMIT);
-    for (let i = 0; i < nOfForests; i++) {
-        let seed = this.findSymmetricPair("PLAINS");
-        let rand_mean = Math.abs(randGaussian(GENERATOR_FOREST_MEAN_EXCLUSION_PERCENTAGE, GENERATOR_FOREST_EXPANSION_DEVIATION));
-        let size = Math.ceil(Math.random() * MAX_FOREST_EXPANSIONS);
-        for (let i = 0; i < size; i++)
-            seed = expand(this, seed, rand_mean, GENERATOR_FOREST_EXPANSION_DEVIATION);
-        forests = forests.concat(seed);
-    }
-    for (let v of forests)
-        if ((this.getTile(v).type !== "SEA") && this.getTile(v).type !== "SHORELINE" && (this.getTile(v).type !== "MOUNTAINS" || Math.random() < 0.2))
-            this.setTile(v, "FOREST_LIGHT");
-    for (let v of forests)
-        if ((findNumberOfHexesType(this, getNeighboursDistanceN(this, v, 1), "FOREST_LIGHT")
-                + findNumberOfHexesType(this, getNeighboursDistanceN(this, v, 1), "FOREST_HEAVY") >= HEAVY_FOREST_ALLOWANCE_LIMIT)
-            && (Math.random() >= HEAVY_FOREST_TURN_CHANCE))
-            this.setTile(v, "FOREST_HEAVY");
-
-    let swamps = this.findSymmetricPair("SHORELINE");
-    let swampExpansions = Math.ceil(Math.random() * SWAMP_EXPANSION_NUMBER + 2);
-    for (let i = 0; i < swampExpansions; i++)
-        swamps = expand(this, swamps, 0.7, 0.1);
-    for (let v of swamps) {
-        if ((this.getTile(v).type !== "SEA") && (this.getTile(v).type !== "SHORELINE")) this.setTile(v, "SWAMP");
-        else if ((this.getTile(v).type === "SHORELINE")) this.setTile(v, "MARSH");
-    }
-
-    this.setTile(middle, "FOREST_HEAVY");
-    let marsh = expand(this, [middle]);
-    let size = Math.ceil(Math.random() * 2.5);
-    for (let i = 0; i < size; i++)
-        marsh = expand(this, marsh, 1 - 0.45 * i, 0.05);
-    for (let t of marsh)
-        if (!(this.getTile(t).type === "FOREST_HEAVY") && ((!(this.getTile(t).type === "MOUNTAINS")) || (Math.random() > 0.98)))
-            this.setTile(t, "SWAMP");
-    for (let t of marsh)
-        if ((findNumberOfHexesType(this, getNeighboursDistanceN(this, t, 1), "FOREST_HEAVY") > 0) && (!(this.getTile(t).type === "FOREST_HEAVY")))
-            this.setTile(t, "MARSH");
-
-};
-
-HexMap.prototype.setSpawns = function () {
-    let flag = false;
-    let pair = [];
-    do {
-        pair = this.findSymmetricPair("SHORELINE");
-        let validation = pair;
-        validation = expand(this, validation, 1, 0);
-        for (let v of validation)
-            if (this.getTile(v).type === "SWAMP" || this.getTile(v).type === "SWAMP") {
-                flag = false;
-                break;
-            }
-        flag = true;
-    } while (!flag);
-    console.log(pair[0], pair[1]);
-    return pair;
 };

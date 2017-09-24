@@ -19,7 +19,7 @@ var Unit = function (type, tile) {
         context.arc(this.coordinates.x, this.coordinates.y, 5, 0, 2*Math.PI);
         context.fill();
 
-    }
+    };
 
     this.move = function (destination) {
         console.log("moved");
@@ -27,6 +27,6 @@ var Unit = function (type, tile) {
         this.coordinates = this.position.middlePoint;
         this.position.unit = this;
     }
-}
+};
 
 

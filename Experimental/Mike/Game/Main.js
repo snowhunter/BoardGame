@@ -1,8 +1,8 @@
 //setting up the 2 canvas elements
-var contexts = setupCanvas();
+let contexts = setupCanvas();
 
 //defining the widgets
-var hexmap, panel, units = [], images = [new Image(), new Image()];
+let hexmap, panel, units = [], images = [new Image(), new Image()];
 let imagesLoaded = 0, imageCount = images.length;
 
 for(let i=0; i<imageCount; i++){
@@ -20,7 +20,7 @@ images[1].src = "./Graphics/TileIcons.png";
 
 
 const size = getProperSize(), rowspan = 45, colspan = 29;
-var mode = 1;
+let mode = 1;
 
 function allLoaded(){
 

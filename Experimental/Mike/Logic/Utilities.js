@@ -296,7 +296,7 @@ function clickedOnBoard(event){
 //takes an array of vectors and a vector, and checks if the array contains the vector
 function vectorIn(vectors, vector){
     for(let v of vectors){
-        if(v.toFloat() == vector.toFloat()){
+        if(v.toFloat() === vector.toFloat()){
             return true;
         }
     }
