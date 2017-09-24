@@ -5,9 +5,28 @@
  */
 
 
-
 const TILE_TYPES = 8;
+function keypressHandler(event) {
+    if(event.keyCode == 32){
+        spawnTestUnit();
+    }
+    /*else if(event.keyCode == 83){
+        if(mode == 2){
+            mode = 1;
+        }
+    }*/
+}
+//returns the proper size for the tile, depending on the screen's resolution
+function getProperSize() {
+    let size = Math.round(10*window.innerHeight/44)/10;
+    const sqrt3 = Math.sqrt(3);
 
+    while(window.innerWidth - size*sqrt3*45<183.8){
+        size -= 0.1;
+    }
+
+    return size;
+}
 //creates a canvas property upon which the tile is drawn. The canvas context is then drawn onto the main map
 function makeTemplate(side, type, image){
 
@@ -19,12 +38,12 @@ function makeTemplate(side, type, image){
 
     //creating the canvas, setting up its dimensions and getting the context
     let canvas = document.createElement("canvas");
-    canvas.width = 2 * TILE_TYPES * side;
+    canvas.width = 2 * TILE_TYPES * 60;
     canvas.height = 2 * side;
     let context = canvas.getContext('2d');
 
-    let incrX = Math.sqrt(3)*side/2.0;
-    let incrY = side/2.0;
+    let incrX = Math.sqrt(3)*side/2;
+    let incrY = side/2;
     let startX = {
         "SEA" : 0,
         "SHORELINE" : 60,
@@ -36,7 +55,6 @@ function makeTemplate(side, type, image){
         "MARSH" : 420
     }[type];
 
-    //context.save();
     context.beginPath();
     context.moveTo(startX, incrY);
     context.lineTo(startX + incrX, 0);
@@ -53,7 +71,7 @@ function makeTemplate(side, type, image){
     //returning the canvas, ready to be drawn onto the main map
     return canvas;
 }
-//
+//returns the offset on the spritesheet
 function getPortraitOffset(type) {
     return {
         "SEA" : 0,
@@ -66,11 +84,11 @@ function getPortraitOffset(type) {
         "MARSH" : 1540
     }[type];
 }
-//
+//obsolete. delete it.
 function makePortraitTemplate(type, image) {
 
     let canvas = document.createElement("canvas"), context = canvas.getContext('2d'), offset = getPortraitOffset(type);
-    canvas.width = 220;
+    canvas.width = 220*8;
     canvas.height = 200;
 
     context.beginPath();
@@ -134,47 +152,17 @@ function highlightBorder(t, context){
     context.stroke();
 
 }
-//locates the hexagon that was clicked and calls the appropriate methods on that hexagon
+//If the click was on the board, locates the tile and calls appropriate methods. If the click was on the panel checks for button presses
 function trackClickTarget(event) {
-    let clickLocation = new Vector(event.clientX, event.clientY);
-    let temp = [], min = Infinity, dst;
-    let c = 45, current = null;
-    let k = null;
+    let clickX = event.clientX, clickY = event.clientY;
 
-
-    for(let row of hexmap.contents){
-        for(let tile of row){
-            k = clickLocation.distanceFrom(tile.middlePoint);
-            if(k<c){
-                temp.push(tile);
-            }
-        }
+    if(clickX< rowspan*size*Math.sqrt(3)){
+        clickedOnBoard(event);
     }
+    else{
+        panel.checkButtonPress(clickX, clickY);
 
-
-    for(let tile of temp){
-        let dst = clickLocation.distanceFrom(tile.middlePoint);
-        if(dst<min){
-            current = tile;
-            min = dst;
-        }
     }
-
-    //we've found the clicked tile and now we call the appropriate methods
-    let neighbours = getNeighbours(current.getVector());
-    let tiles = [];
-
-
-    for(let n of neighbours){
-        tiles.push(hexmap.getTile(n));
-        highlightFill(n, contexts.stageContext);
-    }
-
-
-    highlightBorder(current.getVector(), contexts.stageContext);
-    //highlightFill(current, contexts.stageContext);
-    panel.selectTile(current, contexts.stageContext);
-    panel.selectNeighbours(tiles);
 
 }
 //fills target hexagon with a low-opacity yellowish color
@@ -234,58 +222,88 @@ function gameLoop() {
 }
 //spawns units to test if stuff works
 function spawnTestUnit() {
-    units.push(new Unit("soldier", panel.selectedTile));
-}
-//given the vector pointing to a tile, returns a list containing the vectors of the neighbours
-function getNeighbours (vector) {
-    let x = vector.x, y = vector.y;
-    let neighbours = [new Vector(x - 1, y), new Vector(x + 1, y)];
-    if (vector.y & 1) {
-        neighbours.push(new Vector(x, y - 1), new Vector(x + 1, y - 1), new Vector(x, y + 1), new Vector(x + 1, y + 1));
-    } else {
-        neighbours.push(new Vector(x - 1, y - 1), new Vector(x, y - 1), new Vector(x - 1, y + 1), new Vector(x, y + 1));
-    }
-
-    //looping through the array backwards to prevent errors from splicing while iterating
-    for (let i=neighbours.length-1; i>=0; i--) {
-        if (!isValidVector(hexmap, neighbours[i])){
-            neighbours.splice(i, 1);
-        }
-    }
-
-    return neighbours;
+    let unit = new Unit("soldier", panel.selectedTile)
+    units.push(unit);
+    panel.selectTile(panel.selectedTile);
+    let neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(), panel.selectedUnit.movementRange);
+    let tiles = [];
+    neighbours.forEach(function (n) {
+        tiles.push(hexmap.getTile(n));
+    });
+    panel.selectNeighbours(tiles);
 }
 //given a vector and a range, finds every possible neighbour in that range
-function getNeighboursDistanceN(vector, range = 1, neighbours = null){
+function clickedOnBoard(event){
+    let clickLocation = new Vector(event.clientX, event.clientY);
+    let temp = [], min = Infinity, dst;
+    let c = 45, current = null;
+    let k = null;
 
-    temp = [];
-    if(range>1){
-        if(!neighbours){
-            neighbours = getNeighbours(vector);
-            range--;
-        }
-        else{
-            for(var neighbour of neighbours){
-                temp.concat(getNeighbours(neighbour));
+    for(let row of hexmap.contents){
+        for(let tile of row){
+            k = clickLocation.distanceFrom(tile.middlePoint);
+            if(k<c){
+                temp.push(tile);
             }
-            neighbours.concat(temp);
-            range--;
-            return getNeighboursDistanceN(vector, range, neighbours);
         }
     }
-    else{
-        return removeDuplicateVectors(neighbours);
+
+
+    for(let tile of temp){
+        let dst = clickLocation.distanceFrom(tile.middlePoint);
+        if(dst<min){
+            current = tile;
+            min = dst;
+        }
+    }
+
+
+    //naturally the user starts from here, his click events correspond to highlighting the clicked tile etc.
+    if(mode === 1){
+        panel.selectTile(current, contexts.stageContext);
+        //we've found the clicked tile and now we call the appropriate methods
+        console.log(panel.selectedUnit.movementRange);
+        let neighbours = getNeighboursDistanceN(hexmap, current.getVector(), panel.selectedUnit.movementRange);
+
+        let tiles = vectorsToTiles(neighbours);
+
+        for(let n of neighbours){
+            highlightFill(n, contexts.stageContext);
+        }
+
+
+        highlightBorder(current.getVector(), contexts.stageContext);
+
+        panel.selectNeighbours(tiles);
+    }//this is the "move" mode. The user has pressed the move button and the next clicked tile is the destination
+    else if(mode === 2){
+        let neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(), panel.selectedUnit.movementRange);
+        if(vectorIn(neighbours, current.getVector())){
+            //The unit is moved, the new tile is selected, the new neighbours are found, saved and highlighted.
+            panel.selectedUnit.move(current);
+            panel.selectTile(current);
+            neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(),panel.selectedUnit.movementRange);
+            panel.selectNeighbours(vectorsToTiles(neighbours));
+            mode = 1;
+        }
 
     }
 
 }
-
-function removeDuplicateVectors(array){
-    var temp;
-    array.forEach(function (element) {
-        if(temp.indexOf(element) === -1){
-            temp.push(element);
+//takes an array of vectors and a vector, and checks if the array contains the vector
+function vectorIn(vectors, vector){
+    for(let v of vectors){
+        if(v.toFloat() == vector.toFloat()){
+            return true;
         }
+    }
+    return false;
+}
+//takes an array of vectors and returns the corresponding array of tiles
+function vectorsToTiles(vectors){
+    let tiles = [];
+    vectors.forEach(function (v) {
+        tiles.push(hexmap.getTile(v));
     });
-    return temp;
+    return tiles;
 }

@@ -19,9 +19,8 @@ images[0].src = "spritesheet.png";
 images[1].src = "TileIcons.png";
 
 
-const size = 30, rowspan = 25, colspan = 16;
-
-
+const size = getProperSize(), rowspan = 45, colspan = 29;
+var mode = 1;
 
 function allLoaded(){
 
@@ -37,7 +36,7 @@ function allLoaded(){
     panel.show(contexts.mapContext);
 
     window.addEventListener("click", trackClickTarget);
-    window.addEventListener("keypress", spawnTestUnit);
+    window.addEventListener("keypress", keypressHandler);
 
     displayMap(hexmap);
 

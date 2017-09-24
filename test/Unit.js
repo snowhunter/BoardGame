@@ -22,8 +22,10 @@ var Unit = function (type, tile) {
     }
 
     this.move = function (destination) {
-        this.tile = destination;
-        this.tile.unit = this;
+        console.log("moved");
+        this.position = destination;
+        this.coordinates = this.position.middlePoint;
+        this.position.unit = this;
     }
 }
 

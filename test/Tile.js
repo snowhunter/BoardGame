@@ -2,7 +2,7 @@ var Tile = function (row, column, side, image, type) {
 
     Vector.call(this, row, column);
 
-
+    this.unit = null;
     this.canvas = null;
     this.side = side;
     //this.startingPoint = new Vector(this.x*Math.sqrt(3)*this.side + (this.y & 1) * this.side + (this.y & 1) * (-3), this.side*1.5*this.y);
@@ -23,13 +23,6 @@ var Tile = function (row, column, side, image, type) {
             "SWAMP" : 360,
             "MARSH" : 420
         }[this.type];
-    };
-
-
-
-    this.drawPortrait = function (context) {
-
-
     };
 
     this.getVector = function () {

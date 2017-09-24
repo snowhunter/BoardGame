@@ -4,6 +4,7 @@ var actionPanel = function (rowSpan, tileSize) {
     this.startX = Math.sqrt(3)*tileSize*(rowSpan + 0.5);
     this.startY = 1;
     this.width = window.innerWidth - this.startX; // ~275
+    console.log("board width" + this.startX);
     this.height = window.innerHeight;
 
 
@@ -13,29 +14,24 @@ var actionPanel = function (rowSpan, tileSize) {
     this.selectedTileType = null;
     this.selectedUnit = {type: null};
 
-    this.portraits = {
-        "SEA": makePortraitTemplate("SEA", images[1]),
-        "SHORELINE" : makePortraitTemplate("SHORELINE", images[1]),
-        "PLAINS" : makePortraitTemplate("PLAINS", images[1]),
-        "FOREST_LIGHT" : makePortraitTemplate("FOREST_LIGHT", images[1]),
-        "FOREST_HEAVY" : makePortraitTemplate("FOREST_HEAVY", images[1]),
-        "MOUNTAINS" : makePortraitTemplate("MOUNTAINS", images[1]),
-        "SWAMP" : makePortraitTemplate("SWAMP", images[1]),
-        "MARSH" : makePortraitTemplate("MARSH", images[1]),
-    };
-    
+    //button bounding rectangles
+    this.buttons = {};
+    this.panelLoaded = false;
 
     this.show = function (context) {
 
         this.drawPanel(context);
 
-        this.displayTileData(context);
+        this.displayTileData(context, images[1]);
+
 
         if(this.selectedUnit.type){
 
             this.displayUnitData(context);
 
             this.displayActions(context);
+
+            this.panelLoaded = true;
         }
 
 
@@ -49,10 +45,10 @@ var actionPanel = function (rowSpan, tileSize) {
         context.strokeRect(this.startX + 3, this.startY + 3, this.width - 5, this.height - 5);
     };
     
-    this.displayTileData = function (context) {
+    this.displayTileData = function (context, image) {
 
         let start_x = this.startX + 7, start_y = this.startY + 7, height = this.height/3, width = this.width - 12;
-        let fontsize = 25, textlength, message, placeHolderY;
+        let fontsize = 25, textlength, message, placeHolderY, offset = getPortraitOffset(this.selectedTileType);
 
         //frame
         context.strokeStyle = "#110520";
@@ -66,8 +62,8 @@ var actionPanel = function (rowSpan, tileSize) {
         placeHolderY = this.startY  + 50 + fontsize;
         context.fillText(message, this.startX + (width - textlength)/2 , this.startY + 40);
 
-        if(this.selectedTile){
-            context.drawImage(this.portraits[this.selectedTileType], start_x+3 + getPortraitOffset(this.selectedTileType), placeHolderY, this.width - 20, height - placeHolderY);
+        if(this.selectedTile) {
+            context.drawImage(image, offset, 0, 220, 200, start_x + 3, placeHolderY, this.width - 20, height - placeHolderY);
         }
         else{
             //placeholder
@@ -145,16 +141,18 @@ var actionPanel = function (rowSpan, tileSize) {
         button_width = context.measureText("atttack").width;
 
         context.fillStyle = map["attack"][0];
-        context.fillRect(start_x + (this.width - button_width)/2, start_y, button_width, button_height);
+        this.buttons["attack"] = {x: start_x + (this.width - button_width)/2, y: start_y, width: button_width, height: button_height};
+        context.fillRect(this.buttons["attack"].x, this.buttons["attack"].y, button_width, button_height);
 
         context.fillStyle = map["attack"][1];
-        context.fillText("attack", start_x + (this.width - button_width)/2, start_y + button_height);
+        context.fillText("attack", this.buttons["attack"].x, this.buttons["attack"].y + button_height);
 
         context.fillStyle = map["move"][0];
-        context.fillRect(start_x + (this.width - button_width)/2, start_y + 2*button_height, button_width, button_height);
+        this.buttons["move"] = {x: start_x + (this.width - button_width)/2, y: start_y + 2*button_height, width: button_width, height: button_height};
+        context.fillRect(this.buttons["move"].x, this.buttons["move"].y, button_width, button_height);
 
         context.fillStyle = map["move"][1];
-        context.fillText("move", start_x + (this.width - button_width)/2, start_y + 3*button_height);
+        context.fillText("move", this.buttons["move"].x, this.buttons["move"].y + button_height);
 
     };
 
@@ -178,6 +176,39 @@ var actionPanel = function (rowSpan, tileSize) {
         this.selectedNeighbours = tiles; //***
 
     };
+    
+    this.checkButtonPress = function (clickX, clickY) {
 
+
+        if(!this.selectedUnit.type || !this.panelLoaded){
+            return 0;
+        }
+
+
+
+        if(clickX > this.buttons["attack"].x &&
+            clickY > this.buttons["attack"].y &&
+            (clickY - this.buttons["attack"].y)< this.buttons["attack"].height &&
+            (clickX - this.buttons["attack"].x)< this.buttons["attack"].width){
+
+            this.attack();
+
+        }
+        else if(clickX > this.buttons["move"].x &&
+            clickY > this.buttons["move"].y &&
+            (clickY - this.buttons["move"].y) < this.buttons["move"].height &&
+            (clickX - this.buttons["move"].x) < this.buttons["move"].width){
+
+            this.move();
+        }
+    };
+
+    this.attack = function () {
+        console.log("attack");
+    };
+
+    this.move = function () {
+        mode = 2;
+    };
 
 };

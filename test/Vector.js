@@ -56,7 +56,11 @@ Vector.prototype.dotProduct = function (vector1) {
 
 Vector.prototype.toString = function () {
     return "Vector object, x: " + this.x + ", y: " + this.y;
-}
+};
+
+Vector.prototype.toFloat = function () {
+    return parseFloat(" " + this.x + "." + this.y);
+};
 
 // for use in case we ever need to sort an array of vectors
 function compareVectors (vector1, vector2) {
