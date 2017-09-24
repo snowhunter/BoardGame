@@ -64,3 +64,35 @@ function compareVectors (vector1, vector2) {
     if (vector1.magnitude() > vector2.magnitude()) return 1;
     return 0;
 }
+
+function add (vector1, vector2) {
+    return new Vector(vector1.x + vector2.x, vector1.y + vector2.y);
+}
+
+function sub (vector1, vector2) {
+    return new Vector(vector1.x - vector2.x, vector1.y - vector2.y);
+}
+
+function scale (vector1, s) {
+    return new Vector(vector1.x * s, vector1.y * s);
+}
+
+function magnitude (vector1) {
+    return Math.sqrt((vector1.x * vector1.x) + (vector1.y * vector1.y));
+}
+
+function findMax_X (vectors) {
+    let max = vectors[0].x;
+    for (let v of vectors)
+        if (v.x > max)
+            max = v.x;
+    return max;
+}
+
+function findMax_Y (vectors) {
+    let max = vectors[0].y;
+    for (let v of vectors)
+        if (v.y > max)
+            max = v.y;
+    return max;
+}
