@@ -135,11 +135,10 @@ function displayMap(hexmap) {
 //called on a click event, and strokes the clicked hexagon with a blueish color
 function highlightBorder(t, context){
 
-    var tile = hexmap.getTile(t);
-    //console.log(context.canvas.width, context.canvas.height);
+    let tile = hexmap.getTile(t);
 
-    var startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
-    var startY = tile.startingPoint.y + incrY ;
+    let startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
+    let startY = tile.startingPoint.y + incrY ;
 
     context.strokeStyle = "#1122BB";
     context.lineWidth = 3;

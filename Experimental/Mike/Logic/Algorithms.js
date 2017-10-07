@@ -38,7 +38,7 @@ function between (val, lim1, lim2) {
     }
 }
 
-function zeroes(width, height) {
+function zeroes (width, height) {
     let zero = [];
     for (let i = 0; i < width; i++) {
         zero[i] = [];
@@ -46,4 +46,17 @@ function zeroes(width, height) {
             zero[i][j] = 0.0;
     }
     return zero;
+}
+
+function dec2hex (dec) {
+    return Number(parseInt(dec, 10)).toString(16);
+}
+
+function pad (h) {
+    if(h.length === 1) return "0" + h;
+    else return h;
+}
+
+function normNoise (gen, xin, yin, freq=1, amp=1) {
+    return (amp * gen.noise2D(freq * xin, freq * yin) / 2) + (amp / 2);
 }
