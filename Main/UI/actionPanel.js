@@ -75,7 +75,6 @@ var actionPanel = function (rowSpan, tileSize) {
     };
     
     this.displayUnitData = function (context) {
-
         let start_x = this.startX + 7, start_y  = this.startY + this.height/3 + 10, height = this.height/3;
         let wordHeight = height/10, offset, ratio;
 
@@ -102,7 +101,7 @@ var actionPanel = function (rowSpan, tileSize) {
 
         context.fillStyle = "#000000";
 
-        context.fillText("hp: " + this.selectedUnit.hp + "/300", start_x + 3, start_y + 7 + 2*wordHeight);
+        context.fillText("hp: " + this.selectedUnit.hp + "/" + this.selectedUnit.maxhp, start_x + 3, start_y + 7 + 2*wordHeight);
         context.fillText("attack: " + this.selectedUnit.attack, start_x + 3, start_y + 7 + 3*wordHeight);
         context.fillText("move range: " + this.selectedUnit.movementRange, start_x + 3, start_y + 7 + 4*wordHeight);
 
@@ -204,7 +203,9 @@ var actionPanel = function (rowSpan, tileSize) {
     };
 
     this.attack = function () {
-        console.log("attack");
+        let neighbours  = getNeighboursDistanceN(hexmap, this.selectedTile.getVector(), this.selectedUnit.attackRange);
+        this.selectNeighbours(vectorsToTiles(neighbours));
+        mode = 3;
     };
 
     this.move = function () {

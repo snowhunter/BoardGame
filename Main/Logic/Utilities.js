@@ -8,15 +8,16 @@
 const TILE_TYPES = 8;
 function keypressHandler(event) {
     if(event.keyCode == 32){
-        spawnTestUnit();
+        spawnTestUnit("Sniper");
     }
-    /*else if(event.keyCode == 83){
-        if(mode == 2){
-            mode = 1;
-        }
-    }*/
-    else if(event.keyCode == 83){
-
+    else if(event.keyCode == 115){
+        spawnTestUnit("Scout");
+    }
+    else if(event.keyCode == 104){
+        spawnTestUnit("Heavy");
+    }
+    else if(event.keyCode == 97){
+        spawnTestUnit("Assault");
     }
 }
 //returns the proper size for the tile, depending on the screen's resolution
@@ -87,30 +88,11 @@ function getPortraitOffset(type) {
         "MARSH" : 1540
     }[type];
 }
-//obsolete. delete it.
-function makePortraitTemplate(type, image) {
-
-    let canvas = document.createElement("canvas"), context = canvas.getContext('2d'), offset = getPortraitOffset(type);
-    canvas.width = 220*8;
-    canvas.height = 200;
-
-    context.beginPath();
-    context.moveTo(offset, 0);
-    context.lineTo(offset+220, 0);
-    context.lineTo(offset+220, 200);
-    context.lineTo(offset, 200);
-    context.closePath();
-    context.clip();
-
-    context.drawImage(image, 0, 0);
-
-    return canvas;
-
-}
-//fetches the 2 canvas elements, sets their dimensions and returns their contexts
+//fetches the 3 canvas elements, sets their dimensions and returns their contexts
 function setupCanvas() {
     let map = document.getElementById("map").getContext('2d');
     let stage = document.getElementById("stage").getContext('2d');
+    let animation_canvas = document.getElementById("animation").getContext('2d');
 
     map.canvas.width = window.innerWidth;
     map.canvas.height = window.innerHeight;
@@ -118,9 +100,13 @@ function setupCanvas() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
 
+    animation_canvas.canvas.width = window.innerWidth;
+    animation_canvas.canvas.height = window.innerHeight;
+
     return {
         mapContext: map,
-        stageContext: stage
+        stageContext: stage,
+        animationContext: animation_canvas
     };
 }
 //given a generated island, it displays it
@@ -169,14 +155,18 @@ function trackClickTarget(event) {
 
 }
 //fills target hexagon with a low-opacity yellowish color
-function highlightFill(t, context) {
+function highlightFill(t, context, intention) {
 
     let tile = hexmap.getTile(t);
 
     let startX = tile.startingPoint.x, incrY = tile.side/2, incrX = tile.side*Math.sqrt(3)/2;
     let startY = tile.startingPoint.y + incrY ;
 
-    context.fillStyle = "rgba(255, 243, 17, 0.5)";
+    context.fillStyle = {
+        "select": "rgba(255, 243, 17, 0.5)",
+        "attackRange": "rgba(255, 0, 40, 0.5)",
+        "attackTarget": "rgba(224, 115, 245, 0.5)"
+    }[intention];
 
 
     context.beginPath();
@@ -211,29 +201,69 @@ function gameLoop() {
         highlightBorder(panel.selectedTile, contexts.stageContext);
     }
 
+    let instructions = {
+        1: function () {
+            if(panel.selectedNeighbours){
+                for(let neighbour of panel.selectedNeighbours){
+                    highlightFill(neighbour.getVector(), contexts.stageContext, "select");
+                }
+            }
+        },
+        2: function () {
+            if(panel.selectedNeighbours){
+                for(let neighbour of panel.selectedNeighbours){
+                    highlightFill(neighbour.getVector(), contexts.stageContext, "select");
+                }
+            }
+        },
+        3: function () {
+            if(panel.selectedNeighbours){
+                for(let neighbour of panel.selectedNeighbours){
+                    if(neighbour.unit && neighbour.unit !== panel.selectedUnit){
+                        highlightFill(neighbour.getVector(), contexts.stageContext, "attackTarget");
+                    }
+                    else{
+                        highlightFill(neighbour.getVector(), contexts.stageContext, "attackRange");
+                    }
+                }
+            }
+        }
+    };
+
+    instructions[mode]();
+
+    /*
     if(panel.selectedNeighbours){
         for(let t of panel.selectedNeighbours){
-            highlightFill(t.getVector(), contexts.stageContext);
+            highlightFill(t.getVector(), contexts.stageContext, intention);
         }
-    }
+    }*/
 
-    for(let unit of units){
-        unit.show(contexts.stageContext);
+    for(let i=units.length-1; i>=0; i--){
+        if(units[i].hp >0){
+            units[i].show(contexts.stageContext);
+        }
+        else{
+            //removing all references to the unit, it's then garbage collected, completely removed from the game.
+            units[i].position.unit = null;
+            units.splice(i,1);
+        }
     }
 
     requestAnimationFrame(gameLoop);
 }
 //spawns units to test if stuff works
-function spawnTestUnit() {
-    let unit = new Unit("soldier", panel.selectedTile)
+function spawnTestUnit(type) {
+    let unit = new {
+        "Heavy": Heavy,
+        "Assault": Assault,
+        "Scout": Scout,
+        "Sniper": Sniper
+    }[type](panel.selectedTile);
     units.push(unit);
     panel.selectTile(panel.selectedTile);
     let neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(), panel.selectedUnit.movementRange);
-    let tiles = [];
-    neighbours.forEach(function (n) {
-        tiles.push(hexmap.getTile(n));
-    });
-    panel.selectNeighbours(tiles);
+    panel.selectNeighbours(vectorsToTiles(neighbours));
 }
 //given a vector and a range, finds every possible neighbour in that range
 function clickedOnBoard(event){
@@ -260,38 +290,13 @@ function clickedOnBoard(event){
         }
     }
 
+    let modes = {
+        1: mode1,
+        2: mode2,
+        3: mode3
+    };
 
-    //naturally the user starts from here, his click events correspond to highlighting the clicked tile etc.
-    if(mode === 1){
-        panel.selectTile(current, contexts.stageContext);
-        //we've found the clicked tile and now we call the appropriate methods
-        console.log(panel.selectedUnit.movementRange);
-        let neighbours = getNeighboursDistanceN(hexmap, current.getVector(), panel.selectedUnit.movementRange);
-
-        let tiles = vectorsToTiles(neighbours);
-
-        for(let n of neighbours){
-            highlightFill(n, contexts.stageContext);
-        }
-
-
-        highlightBorder(current.getVector(), contexts.stageContext);
-
-        panel.selectNeighbours(tiles);
-    }//this is the "move" mode. The user has pressed the move button and the next clicked tile is the destination
-    else if(mode === 2){
-        let neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(), panel.selectedUnit.movementRange);
-        if(vectorIn(neighbours, current.getVector())){
-            //The unit is moved, the new tile is selected, the new neighbours are found, saved and highlighted.
-            panel.selectedUnit.move(current);
-            panel.selectTile(current);
-            neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(),panel.selectedUnit.movementRange);
-            panel.selectNeighbours(vectorsToTiles(neighbours));
-            mode = 1;
-        }
-
-    }
-
+    modes[mode](current);
 }
 //takes an array of vectors and a vector, and checks if the array contains the vector
 function vectorIn(vectors, vector){
@@ -309,4 +314,55 @@ function vectorsToTiles(vectors){
         tiles.push(hexmap.getTile(v));
     });
     return tiles;
+}
+
+//Default mode. Selecting a tile highlights the adjacent tiles depending on the movement range of the unit (if any) on the tile.
+//todo: change this to vision instead of movement range when vision is introduced
+function mode1(selected_tile) {
+    panel.selectTile(selected_tile, contexts.stageContext);
+    let neighbours = getNeighboursDistanceN(hexmap, selected_tile.getVector(), panel.selectedUnit.movementRange);
+
+    for(let n of neighbours){
+        highlightFill(n, contexts.stageContext, "select");
+    }
+
+    console.log(neighbours);
+
+    highlightBorder(selected_tile.getVector(), contexts.stageContext);
+    panel.selectNeighbours(vectorsToTiles(neighbours));
+}
+//mode 2 is used when the user has clicked the move button. The next click, if it's on a valid tile, moves the unit to the target tile
+//while in this mode, highlighted tiles should depend on the movement range of the unit, if any.
+function mode2(selected_tile) {
+    let neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(), panel.selectedUnit.movementRange);
+    if(vectorIn(neighbours, selected_tile.getVector())){
+        //The unit is moved, the new tile is selected, the new neighbours are found, saved and highlighted,
+        //the unit's reference on the tile object is set back to null
+        panel.selectedTile.unit = null;
+        panel.selectedUnit.move(selected_tile);
+        panel.selectTile(selected_tile);
+        neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(),panel.selectedUnit.movementRange);
+        panel.selectNeighbours(vectorsToTiles(neighbours));
+        mode = 1;
+    }
+}
+//mode 3 is used when the user has clicked the attack button. This should highlight the adjacent tiles with a red color, except
+//for possible targets within that range (the attack range). The next click is only valid if it's on one of the valid targets.
+function mode3(selected_tile) {
+    let neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile.getVector(), panel.selectedUnit.attackRange);
+    if(vectorIn(neighbours, selected_tile.getVector())){
+        if((selected_tile !== panel.selectedTile) && selected_tile.unit){
+            selected_tile.unit.hp -= panel.selectedUnit.attack;
+            mode = 1;
+            neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile, panel.selectedUnit.movementRange);
+            console.log(neighbours);
+            panel.selectNeighbours(vectorsToTiles(neighbours));
+        }
+    }
+    else{
+        mode = 1;
+        panel.selectTile(selected_tile);
+        neighbours = getNeighboursDistanceN(hexmap, panel.selectedTile, panel.selectedUnit.movementRange);
+        panel.selectNeighbours(vectorsToTiles(neighbours));
+    }
 }

@@ -20,7 +20,7 @@ images[1].src = "./Graphics/TileIcons.png";
 
 
 const size = getProperSize(), rowspan = 45, colspan = 29;
-var mode = 1;
+var  mode = 1;
 
 function allLoaded(){
 
