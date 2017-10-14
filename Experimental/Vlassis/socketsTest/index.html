@@ -91,11 +91,16 @@
             p1.style.width = "100%";
             e.appendChild(p1);
         });
+
+        socket.on('redirect', function (path) {
+           window.location.href += path;
+        });
         
         socket.on('join-data', function (data) {
             let e = document.getElementById("container");
-            console.log("games available: " + data.game_IDs.length);
+            //iterating through the available games to join, via the host IDs
             for(let i=0; i<data.game_IDs.length; i++){
+                //representing each game as a button which the user can click to join that game
                 let game = document.createElement("button");
                 game.innerHTML = data.game_IDs[i];
                 game.addEventListener("click", function () {
