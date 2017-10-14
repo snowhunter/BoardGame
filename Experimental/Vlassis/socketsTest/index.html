@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+            width:100%;
+            height:100%;
+            overflow:hidden;
+        }
+        /*#background{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }*/
+        #wrapper{
+            top: 30%;
+            width: 100%;
+            position: absolute;
+            z-index: 1;
+        }
+        #button-container{
+            display: block;
+            margin: auto;
+            width: 300px;
+            height: 100px;
+            top: 30%;
+        }
+        #host{
+            float: left;
+            height: 80px;
+            width: 150px;
+        }
+        #join{
+            float: right;
+            height: 80px;
+            width: 150px;
+        }
+        #container{
+            position: absolute;
+            border: solid black;
+            height: 300px;
+            background-color: darkorange;
+            visibility: hidden;
+            margin: auto;
+            display: block;
+            width: 50%;
+            left: 25%;
+        }
+    </style>
+</head>
+<body>
+
+    <!--<img src="project_hexagon.png" id="background">-->
+    <div id="wrapper">
+
+        <div id="button-container">
+            <button id="host" onclick="host()">Host Game</button>
+            <button id="join" onclick="join()">Join Game</button>
+        </div>
+
+        <div id="container">
+
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        function host() {
+            document.getElementById("container").style.visibility = "visible";
+            socket.emit('host', socket.id);
+        }
+
+        function join(){
+            document.getElementById("container").style.visibility = "visible";
+            socket.emit('join', "kappapride");
+        }
+
+        function selectGame(id) {
+            socket.emit('game-select', id);
+        }
+        
+        socket.on('host-data', function (data) {
+            let e = document.getElementById("container");
+            let p1 = document.createElement("div");
+            p1.innerHTML = "<h1>Player1: " + data + "</h1>";
+            p1.style.width = "100%";
+            e.appendChild(p1);
+        });
+        
+        socket.on('join-data', function (data) {
+            let e = document.getElementById("container");
+            console.log("games available: " + data.game_IDs.length);
+            for(let i=0; i<data.game_IDs.length; i++){
+                let game = document.createElement("button");
+                game.innerHTML = data.game_IDs[i];
+                game.addEventListener("click", function () {
+                    selectGame(this.innerHTML);
+                });
+                game.style.width = "100%";
+                game.style.height = "50px";
+                game.style.backgroundColor = i%2==0? "aqua": "aliceblue";
+                e.appendChild(game);
+            }
+        });
+
+    </script>
+
+</body>
+</html>
